@@ -1,0 +1,54 @@
+Operational data for interface HundredGigE0/1/0/0:
+
+State:
+    Administrative state: enabled
+    Operational state: Up
+    LED state: Green On
+
+Phy:
+    Media type: R fiber over 4 Lane optics (long reach)
+    Optics:
+        Vendor: CISCO-INNOLIGHT
+        Part number: TR-FC13R-NCI
+        Serial number: INL123456
+    Digital Optical Monitoring:
+        Transceiver Temp: 37.011 C
+
+        Alarms key: (H) Alarm high, (h) Warning high
+                    (L) Alarm low, (l) Warning low
+           Wavelength    Tx Power          Rx Power      Laser Bias
+        Lane  (nm)    (dBm)    (mW)     (dBm)     (mW)      (mA)
+        --   -----   ------   ------    ------   ------    ------
+        1    0     2.2   1.6769     -1.1   0.2738     176.624
+        2    0     1.4   1.3649     -3.3   0.0770     176.624
+        3    0     2.5   1.7848     -3.5   0.1120     176.624
+        4    0     2.8   1.8950     -6.2   0.6707     176.624
+
+        DOM alarms:
+            Not available
+    Statistics:
+        FEC:
+            Corrected Codeword Count: 0
+            Uncorrected Codeword Count: 0
+
+MAC address information:
+    Operational address: 380e.4dc1.f0ff
+    Burnt-in address: 380e.4dc1.f0ff
+    1 unicast address in filter:
+        4c00.82e3.8e10
+    Operating in multicast promiscuous mode
+
+Autonegotiation disabled.
+
+Operational values:
+    Speed: 100Gbps
+    Duplex: Full Duplex
+    Flowcontrol: None
+    Loopback: None (or external)
+    MTU: 9194
+    MRU: 9194
+    Inter-packet gap: standard (12)
+    BER monitoring:
+        Signal Degrade: 1e-255 (no-alarm)
+        Signal Fail: 1e-0 (report-alarm)
+    Forward error correction: Not Configured

@@ -1,0 +1,418 @@
+Mon May 01 19:40:20.700 EST
+
+PCS
+  Previous PCS Status:
+    PCS Rx Link Status was DOWN
+    PCS Rx Link was NOT Block Locked
+    PCS BER (Sync Header Error) Counts: 0
+    PCS BER (BIP) Counts: 0
+    PCS BER (BIP) 1 second count: 0 (BER < 10e-9)
+    PCS SD-BER Alarm was OFF
+    PCS SF-BER Alarm was OFF
+  Current PCS Status:
+    PCS Rx Link Status is UP
+    PCS is Up
+    PCS Rx Link is Block Locked
+    PCS BER (Sync Header Error) Counts: 0
+    PCS BER (BIP) Counts: 0
+    PCS BER (BIP) 1 second count: 0 (BER < 10e-9)
+    PCS SD-BER Alarm is OFF
+    PCS SF-BER Alarm is OFF
+
+PCS detailed information:
+
+  RX Service Interface Lane Sync Header Lock Status:
+
+    Lane 0 : Locked
+    Lane 1 : Locked
+    Lane 2 : Locked
+    Lane 3 : Locked
+    Lane 4 : Locked
+    Lane 5 : Locked
+    Lane 6 : Locked
+    Lane 7 : Locked
+    Lane 8 : Locked
+    Lane 9 : Locked
+
+  Mapping of Service Interface Lane and RX PCS Lane:
+
+    Rx Service Interface Lane 0  = PCS Lane 0
+    Rx Service Interface Lane 1  = PCS Lane 1
+    Rx Service Interface Lane 2  = PCS Lane 2
+    Rx Service Interface Lane 3  = PCS Lane 3
+    Rx Service Interface Lane 4  = PCS Lane 4
+    Rx Service Interface Lane 5  = PCS Lane 5
+    Rx Service Interface Lane 6  = PCS Lane 6
+    Rx Service Interface Lane 7  = PCS Lane 7
+    Rx Service Interface Lane 8  = PCS Lane 8
+    Rx Service Interface Lane 9  = PCS Lane 9
+
+  PCS Lane BIP Error Counters:
+
+             Even sublane     Odd sublane
+    Lane 0 : 0                0
+    Lane 1 : 0                0
+    Lane 2 : 0                0
+    Lane 3 : 0                0
+    Lane 4 : 0                0
+    Lane 5 : 0                0
+    Lane 6 : 0                0
+    Lane 7 : 0                0
+    Lane 8 : 0                0
+    Lane 9 : 0                0
+
+  Total PCS Lane BIP Error Count          : 0
+  Total PCS Lane Sync Header Error Count  : 0
+  Total PCS Lane Bad 64/66 Code Count     : 0
+
+QSFPP General Info:
+=================
+
+PHY/QSFPP Status:  QSFPP is Working as expected
+
+
+QSFPP Info:
+=========
+Max Power Dissipation: 3500 mW
+
+QSFPP Type: 100GBASE-LR4
+Vendor Name: CISCO-INNOLIGHT
+Vendor Part Number: TR-FC13R-NCI
+Vendor Serial number: INL12345678
+
+Cisco PID: QSFP-100G-LR4-S
+Cisco VID: V02
+Cisco PN: 10-3146-02
+
+
+QSFPP Detail Info:
+================
+
+Temp: 30.24 C
+Tx bias: 173.38 mA
+Total Tx power: 6.79 mW (  8.32 dBm)
+  Lane 0 Tx power: 1.54 mW (  1.86 dBm)
+  Lane 1 Tx power: 1.77 mW (  2.47 dBm)
+  Lane 2 Tx power: 1.68 mW (  2.25 dBm)
+  Lane 3 Tx power: 1.81 mW (  2.57 dBm)
+Total Rx power: 4.43 mW (  6.46 dBm)
+  Lane 0 Rx power: 0.95 mW ( -0.24 dBm)
+  Lane 1 Rx power: 1.21 mW (  0.81 dBm)
+  Lane 2 Rx power: 0.97 mW ( -0.12 dBm)
+  Lane 3 Rx power: 1.30 mW (  1.14 dBm)
+
+QSFPP Status:
+ Module is present
+ is powered on
+ Tx is enabled.
+ Rx is enabled.
+
+Alarms: No active alarms
+
+Warnings: No active warnings
+
+THRESHOLDS
+                        High Alarm     Low Alarm     High Warning      Low Warning
+   Temperature     C        75.0         -5.0           70.0            0.0
+   Voltage         mV       3630          2970            3465            3135
+   Transmit power dBm       7.5          -8.3            4.5            -4.3
+   Receive power  dBm       7.5          -14.7            4.5            -10.6
+
+PHY Detailed Info:
+==================
+
+DUAL GEARBOX CTX:
+Inited:            TRUE
+Ctrace Err Ptr:  0x7fdd84000f08
+Ctrace Evt Ptr:  0x7fdd840095c8
+
+opaque:          0x560b676776b0
+nodeid:          0x560b696fae18
+logical slice:           4
+port:            0
+phy id:            8
+dev_addr:        0x0
+dev_type:        0x1
+User Mode:   0x1
+Chip Version:    2796 Rev.b0
+Firmware Version:    0xd017
+ucode Checksum:    0x600d
+Chip Powerup:    TRUE
+Chip Ref ClockSel:    156.25 Mhz
+
+System Side Lanes:
+------------------
+Lane 0 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 1 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 2 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 3 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 4 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 5 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 6 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 7 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 8 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+Lane 9 Rx POWER:UP   TX POWER:UP SIG DET:YES   PMD LOCK:YES
+
+Line Side Lanes:
+------------------
+Lane 0 Rx POWER:UP TX POWER:UP SIG DET:YES PMD LOCK:YES
+ LINK LOCK:YES
+Lane 1 Rx POWER:UP TX POWER:UP SIG DET:YES PMD LOCK:YES
+ LINK LOCK:YES
+Lane 2 Rx POWER:UP TX POWER:UP SIG DET:YES PMD LOCK:YES
+ LINK LOCK:YES
+Lane 3 Rx POWER:UP TX POWER:UP SIG DET:YES PMD LOCK:YES
+ LINK LOCK:YES
+
+Loopback   status:
+--------------------
+System Side Loopback:
+---------------------
+Lane 0 : DISABLED
+Lane 1 : DISABLED
+Lane 2 : DISABLED
+Lane 3 : DISABLED
+Lane 4 : DISABLED
+Lane 5 : DISABLED
+Lane 6 : DISABLED
+Lane 7 : DISABLED
+Lane 8 : DISABLED
+Lane 9 : DISABLED
+
+Line Side Loopback:
+---------------------
+Lane 0 : DISABLED
+Lane 1 : DISABLED
+Lane 2 : DISABLED
+Lane 3 : DISABLED
+
+
+BCM82391 CTX:
+Inited:          TRUE
+Ctrace Err Ptr:  0x7fdd840f2728
+Ctrace Evt Ptr:  0x7fdd84103528
+
+opaque:          0x560b6767cf70
+nodeid:          0x560b696fae18
+Logical Slice:   4
+Logical Port:    16
+Port:            0
+Phy id:          16
+dev_addr:        0x1
+dev_type:        0x1
+User Mode:       0
+Fault Option:    Passthrough
+Firmware Version:0xd006
+ucode Checksum:  0x600d
+FEC Status:            FALSE
+FEC Corrected CW:      0
+FEC Uncorrected CW:    0
+
+
+System Side Device Status:
++--------- --------- --------- --------- ---------+
+| Lane  #   Rx  PWR   Tx  PWR   Sig Det   PMD Lck |
++--------- --------- --------- --------- ---------+
+| Lane  0     Ena       Ena       Yes    Locked   |
+| Lane  1     Ena       Ena       Yes    Locked   |
+| Lane  2     Ena       Ena       Yes    Locked   |
+| Lane  3     Ena       Ena       Yes    Locked   |
++--------- --------- --------- --------- ---------+
+
+Line Side Device Status:
++--------- --------- --------- --------- --------- ---------+
+| Lane  #   Rx  PWR   Tx  PWR   Sig Det   PMD Lck   LNK Sts |
++--------- --------- --------- --------- --------- ---------+
+| Lane  0     Ena       Ena       Yes    Locked    UnLocked |
+| Lane  1     Ena       Ena       Yes    Locked    UnLocked |
+| Lane  2     Ena       Ena       Yes    Locked    UnLocked |
+| Lane  3     Ena       Ena       Yes    Locked    UnLocked |
++--------- --------- --------- --------- --------- ---------+
+
+
+System Side Loopback configuration:
++--------- ---------- ------- -----+
+| Lane  #   Shallow    Deep    MAC |
++--------- ---------- ------- -----+
+| Lane  0      Dis      Dis    Dis |
+| Lane  1      Dis      Dis    Dis |
+| Lane  2      Dis      Dis    Dis |
+| Lane  3      Dis      Dis    Dis |
++--------- ---------- ------- -----+
+
+Line Side Loopback configuration:
++--------- ---------- ------- -----+
+| Lane  #   Shallow    Deep    MAC |
++--------- ---------- ------- -----+
+| Lane  0      Dis      Dis    Dis |
+| Lane  1      Dis      Dis    Dis |
+| Lane  2      Dis      Dis    Dis |
+| Lane  3      Dis      Dis    Dis |
++--------- ---------- ------- -----+
+
+
+Device Register Values:
++--------- ------------------ ------------------+
+| Lane  #     System  Side        Line  side    |
++--------- ------------------ ------------------+
+|Addr: 0x4200d16c Desc: Live PMD Lock Status    |
++--------- ------------------ ------------------+
+| Lane  0                 0x1                0x1|
+| Lane  1                 0x1                0x1|
+| Lane  2                 0x1                0x1|
+| Lane  3                 0x1                0x1|
++--------- ------------------ ------------------+
+|Addr: 0x40020215 Desc: PCS block Status        |
++--------- ------------------ ------------------+
+| Lane  0                 0x7                0x7|
+| Lane  1                 0x7                0x7|
+| Lane  2                 0x7                0x7|
+| Lane  3                 0x7                0x7|
++--------- ------------------ ------------------+
+|Addr: 0x49003015 Desc: Pkt pipeline Status EG1 |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4900302d Desc: Pkt pipeline Status EG2 |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x49004015 Desc: Pkt pipeline Status IG1 |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4900402c Desc: Pkt pipeline Status IG2 |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100000b Desc: MAC Rx Pkt              |
++--------- ------------------ ------------------+
+| Lane  0           0x2dd8f9b           0x490407|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100004c Desc: MAC Tx Pkt              |
++--------- ------------------ ------------------+
+| Lane  0            0x490404          0x2dd8f9f|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100000f Desc: Receive FCS Error (CRC) |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x41000053 Desc: Transmit FCS Error (CRC)|
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4200d0e8 Desc: SIGDET_STS0             |
++--------- ------------------ ------------------+
+| Lane  0               0x211              0x211|
+| Lane  1               0x211              0x211|
+| Lane  2               0x211              0x211|
+| Lane  3               0x211              0x211|
++--------- ------------------ ------------------+
+|Addr: 0x4100004b Desc: TPOK                    |
++--------- ------------------ ------------------+
+| Lane  0            0x47d514          0x2dcf402|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100005c Desc: TFRG                    |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100006f Desc: TBYT                    |
++--------- ------------------ ------------------+
+| Lane  0          0x3675448d        0xf4716cab0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x41000022 Desc: RPOK                    |
++--------- ------------------ ------------------+
+| Lane  0           0x2dcf3fe           0x47d43a|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x41000035 Desc: RFRG                    |
++--------- ------------------ ------------------+
+| Lane  0                   0                  0|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4100003d Desc: RBYT                    |
++--------- ------------------ ------------------+
+| Lane  0         0xf4716c998         0x3675455f|
+| Lane  1                   0                  0|
+| Lane  2                   0                  0|
+| Lane  3                   0                  0|
++--------- ------------------ ------------------+
+|Addr: 0x4900b010 Desc: Egress FC               |
++--------- ------------------ ------------------+
+| Lane  0                 0x8                0x8|
+| Lane  1                 0x8                0x8|
+| Lane  2                 0x8                0x8|
+| Lane  3                 0x8                0x8|
++--------- ------------------ ------------------+
+|Addr: 0x4900a010 Desc: Ingress FC              |
++--------- ------------------ ------------------+
+| Lane  0                 0x8                0x8|
+| Lane  1                 0x8                0x8|
+| Lane  2                 0x8                0x8|
+| Lane  3                 0x8                0x8|
++--------- ------------------ ------------------+
+|Addr: 0x49009010 Desc: Egress SF               |
++--------- ------------------ ------------------+
+| Lane  0                 0x9                0x8|
+| Lane  1                 0x8                0x8|
+| Lane  2                 0x8                0x8|
+| Lane  3                 0x8                0x8|
++--------- ------------------ ------------------+
+|Addr: 0x49008010 Desc: Ingress SF              |
++--------- ------------------ ------------------+
+| Lane  0                 0x9                0x8|
+| Lane  1                 0x8                0x8|
+| Lane  2                 0x8                0x8|
+| Lane  3                 0x8                0x8|
++--------- ------------------ ------------------+
+|Addr: 0x41000604 Desc: Config 1                |
++--------- ------------------ ------------------+
+| Lane  0        0x5000008800       0x5000008800|
+| Lane  1        0x700000c806       0x700000c806|
+| Lane  2        0x700000c806       0x700000c806|
+| Lane  3        0x700000c806       0x700000c806|
++--------- ------------------ ------------------+
+|Addr: 0x41000622 Desc: Config 2                |
++--------- ------------------ ------------------+
+| Lane  0                 0x3                0x3|
+| Lane  1                 0x3                0x3|
+| Lane  2                 0x3                0x3|
+| Lane  3                 0x3                0x3|
++--------- ------------------ ------------------+

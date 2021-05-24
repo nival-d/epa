@@ -1,0 +1,294 @@
+Sun May 01 18:04:16.128 EST
+
+PCS
+  Previous PCS Status:
+    PCS Rx Link Status was UP
+    PCS Rx Link was Block Locked
+    PCS BER (Sync Header Error) Counts: 0
+    PCS BER (BIP) Counts: 0
+    PCS BER (BIP) 1 second count: 0 (BER < 10e-9)
+    PCS SD-BER Alarm was OFF
+    PCS SF-BER Alarm was OFF
+  Current PCS Status:
+    PCS Rx Link Status is UP
+    PCS is Up
+    PCS Rx Link is Block Locked
+    PCS BER (Sync Header Error) Counts: 0
+    PCS BER (BIP) Counts: 0
+    PCS BER (BIP) 1 second count: 0 (BER < 10e-9)
+    PCS SD-BER Alarm is OFF
+    PCS SF-BER Alarm is OFF
+
+PCS detailed information:
+
+  RX Service Interface Lane Sync Header Lock Status:
+
+    Lane-0 : Locked           Lane-10 : Locked
+    Lane-1 : Locked           Lane-11 : Locked
+    Lane-2 : Locked           Lane-12 : Locked
+    Lane-3 : Locked           Lane-13 : Locked
+    Lane-4 : Locked           Lane-14 : Locked
+    Lane-5 : Locked           Lane-15 : Locked
+    Lane-6 : Locked           Lane-16 : Locked
+    Lane-7 : Locked           Lane-17 : Locked
+    Lane-8 : Locked           Lane-18 : Locked
+    Lane-9 : Locked           Lane-19 : Locked
+
+  RX Service Interface Lane Marker Lock Status:
+
+    Lane-0 : Locked           Lane-10 : Locked
+    Lane-1 : Locked           Lane-11 : Locked
+    Lane-2 : Locked           Lane-12 : Locked
+    Lane-3 : Locked           Lane-13 : Locked
+    Lane-4 : Locked           Lane-14 : Locked
+    Lane-5 : Locked           Lane-15 : Locked
+    Lane-6 : Locked           Lane-16 : Locked
+    Lane-7 : Locked           Lane-17 : Locked
+    Lane-8 : Locked           Lane-18 : Locked
+    Lane-9 : Locked           Lane-19 : Locked
+
+  Mapping of Service Interface Lane and RX PCS Lane:
+
+    Rx Service Interface Lane 0  = PCS Lane 19
+    Rx Service Interface Lane 1  = PCS Lane 12
+    Rx Service Interface Lane 2  = PCS Lane 18
+    Rx Service Interface Lane 3  = PCS Lane 16
+    Rx Service Interface Lane 4  = PCS Lane 8
+    Rx Service Interface Lane 5  = PCS Lane 2
+    Rx Service Interface Lane 6  = PCS Lane 10
+    Rx Service Interface Lane 7  = PCS Lane 5
+    Rx Service Interface Lane 8  = PCS Lane 4
+    Rx Service Interface Lane 9  = PCS Lane 0
+    Rx Service Interface Lane 10  = PCS Lane 17
+    Rx Service Interface Lane 11  = PCS Lane 14
+    Rx Service Interface Lane 12  = PCS Lane 15
+    Rx Service Interface Lane 13  = PCS Lane 11
+    Rx Service Interface Lane 14  = PCS Lane 6
+    Rx Service Interface Lane 15  = PCS Lane 9
+    Rx Service Interface Lane 16  = PCS Lane 13
+    Rx Service Interface Lane 17  = PCS Lane 7
+    Rx Service Interface Lane 18  = PCS Lane 1
+    Rx Service Interface Lane 19  = PCS Lane 3
+
+  PCS Lane BIP Error Counters:
+    Lane-0 : 0                Lane-10 : 0
+    Lane-1 : 0                Lane-11 : 0
+    Lane-2 : 0                Lane-12 : 0
+    Lane-3 : 0                Lane-13 : 0
+    Lane-4 : 0                Lane-14 : 0
+    Lane-5 : 0                Lane-15 : 0
+    Lane-6 : 0                Lane-16 : 0
+    Lane-7 : 0                Lane-17 : 0
+    Lane-8 : 0                Lane-18 : 0
+    Lane-9 : 0                Lane-19 : 0
+
+  Total PCS Lane BIP Error Count          : 0
+  Total PCS Lane Sync Header Error Count  : 0
+  Total PCS Lane Bad 64/66 Code Count     : 0
+
+CPAK General Info:
+=================
+
+PHY/CPAK Status:  CPAK is Working as expected
+
+
+CPAK Info:
+=========
+Max Power Dissipation: 7110 mW
+
+CPAK Type: 100GBASE-LR4
+Vendor Name: CISCO
+Vendor Part Number: 800-39910-09
+Vendor Serial number: FBN12345678
+
+Cisco PID: CPAK-100G-LR4
+Cisco VID: V04
+Cisco PN: 800-39910-09
+
+
+CPAK Detail Info:
+================
+
+Temp: 40.07 C
+Tx bias: 279.68 mA
+Total Tx power: 2.91 mW (  4.65 dBm)
+  Lane 0 Tx power: 0.74 mW ( -1.30 dBm)
+  Lane 1 Tx power: 0.70 mW ( -1.54 dBm)
+  Lane 2 Tx power: 0.73 mW ( -1.34 dBm)
+  Lane 3 Tx power: 0.74 mW ( -1.31 dBm)
+Total Rx power: 4.11 mW (  6.14 dBm)
+  Lane 0 Rx power: 1.28 mW (  1.06 dBm)
+  Lane 1 Rx power: 1.04 mW (  0.19 dBm)
+  Lane 2 Rx power: 1.08 mW (  0.32 dBm)
+  Lane 3 Rx power: 0.71 mW ( -1.48 dBm)
+
+CPAK Status:
+ Module is present
+ is powered on
+ Tx is enabled.
+ Rx is enabled.
+
+Alarms: No active alarms
+
+Warnings: No active warnings
+
+THRESHOLDS
+                        High Alarm     Low Alarm     High Warning      Low Warning
+   Temperature     C        80.0         -5.0           75.0            0.0
+   Voltage         mV       3663          2937            3531            3069
+   Transmit power dBm       7.5          -8.5            4.5            -4.3
+   Receive power  dBm       7.5          -14.7            4.5            -10.6
+
+PHY Detailed Info:
+==================
+
+GEARBOX CTX:
+Inited:            TRUE
+levm Ptr:        0x7fefef96c578
+Ctrace Err Ptr:  0x7fefc84425e8
+Ctrace Evt Ptr:  0x7fefc844acb8
+
+Inited:            TRUE
+opaque:          0x7fefeda14600
+nodeid:          0x7fefef94ddf8
+slice:           2
+port:            0
+dev_addr:        0x0
+dev_type:        0x1
+User Mode:   0x2
+Mode Sel:   0x0
+Freq Sel:    0x3
+Num of Sys Lanes:     10
+Num of Line Lanes:    4
+Chip Version:    47948 Rev.a1
+Firmware Version:    0x11
+ucode Checksum:    0x600d
+Chip Powerup:    TRUE
+Chip ModeSel:    100G - 4 Lanes
+Chip Ref ClockSel:    161.1328 Mhz
+
+System Side Lanes:
+------------------
+Lane 0 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 1 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 2 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 3 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 4 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 5 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 6 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 7 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 8 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 9 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+
+DC Lane 0 : Rx Powered UP : Tx Powered UP
+DC Lane 1 : Rx Powered UP : Tx Powered UP
+DC Lane 2 : Rx Powered UP : Tx Powered UP
+DC Lane 3 : Rx Powered UP : Tx Powered UP
+DC Lane 4 : Rx Powered UP : Tx Powered UP
+DC Lane 5 : Rx Powered UP : Tx Powered UP
+DC Lane 6 : Rx Powered UP : Tx Powered UP
+DC Lane 7 : Rx Powered UP : Tx Powered UP
+DC Lane 8 : Rx Powered UP : Tx Powered UP
+DC Lane 9 : Rx Powered UP : Tx Powered UP
+
+System Side CDR lock status :
+Lane 0: [0xb000] LOCK
+Lane 1: [0xb000] LOCK
+Lane 2: [0xb000] LOCK
+Lane 3: [0xb000] LOCK
+Lane 4: [0xb000] LOCK
+Lane 5: [0xb000] LOCK
+Lane 6: [0xb000] LOCK
+Lane 7: [0xb000] LOCK
+Lane 8: [0xb000] LOCK
+Lane 9: [0xb000] LOCK
+
+Line Side Lanes:
+------------------
+Lane 0 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 1 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 2 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+Lane 3 :    ENABLED   : Rx OUT OF RESET: Tx OUT OF RESET
+
+Lane 0 : Rx Powered UP : Tx Powered UP
+Lane 1 : Rx Powered UP : Tx Powered UP
+Lane 2 : Rx Powered UP : Tx Powered UP
+Lane 3 : Rx Powered UP : Tx Powered UP
+
+Line Side CDR lock status :
+Lane 0 [0xff]: LOCK
+Lane 1 [0xff]: LOCK
+Lane 2 [0xff]: LOCK
+Lane 3 [0xff]: LOCK
+
+1.000A Lane status (Signal Detect):
+Lane 0 : SIG DET
+Lane 1 : SIG DET
+Lane 2 : SIG DET
+Lane 3 : SIG DET
+
+Line Side RX LOS status:
+--------------------
+Lane 0 [0x7fa]: SIGNAL GOOD
+Lane 1 [0x7fa]: SIGNAL GOOD
+Lane 2 [0x7fa]: SIGNAL GOOD
+Lane 3 [0x7fa]: SIGNAL GOOD
+
+System side LOS status:
+--------------------
+Lane 0: [0x63] SIG DET
+Lane 1: [0x63] SIG DET
+Lane 2: [0x63] SIG DET
+Lane 3: [0x63] SIG DET
+Lane 4: [0x63] SIG DET
+Lane 5: [0x63] SIG DET
+Lane 6: [0x63] SIG DET
+Lane 7: [0x63] SIG DET
+Lane 8: [0x63] SIG DET
+Lane 9: [0x63] SIG DET
+
+System Side PLL Lock status :
+-----------------------------
+Lane 0: [f80a] LOCK
+Lane 1: [f80a] LOCK
+Lane 2: [f80a] LOCK
+Lane 3: [f80a] LOCK
+Lane 4: [f80a] LOCK
+Lane 5: [f80a] LOCK
+Lane 6: [f80a] LOCK
+Lane 7: [f80a] LOCK
+Lane 8: [f80a] LOCK
+Lane 9: [f80a] LOCK
+
+Line Side PLL Lock status :
+-----------------------------
+TX PLL : LOCK DETECT
+TX VCO calibrations : VALID
+TX VCO calibration state : GOOD
+
+RX PLL : LOCK DETECT
+RX VCO calibrations : VALID
+RX VCO calibration state : GOOD
+
+
+Loopback   status:
+--------------------
+System Side Loopback:
+---------------------
+Lane 0 : DISABLED
+Lane 1 : DISABLED
+Lane 2 : DISABLED
+Lane 3 : DISABLED
+Lane 4 : DISABLED
+Lane 5 : DISABLED
+Lane 6 : DISABLED
+Lane 7 : DISABLED
+Lane 8 : DISABLED
+Lane 9 : DISABLED
+
+Line Side Loopback:
+-------------------
+Lane 0 : DISABLED
+Lane 1 : DISABLED
+Lane 2 : DISABLED
+Lane 3 : DISABLED
