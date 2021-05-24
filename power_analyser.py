@@ -138,14 +138,16 @@ class endpointRegister():
         logger.debug('direction: {}'.format(direction))
         result = {}
         for line in iter(data):
-            result[line[0]] = {}
+            # we count lanes from 0. Cisco software is inconsistent. Normalizing now.
+            lane_num = str(int(line[0]) - 1)
+            result[lane_num] = {}
             if direction == 'Tx':
-                result[line[0]] = {
+                result[lane_num] = {
                     'dBm': line[1],
                     'mW': line[2]
                 }
             elif direction == 'Rx':
-                result[line[0]] = {
+                result[lane_num] = {
                     'dBm': line[3],
                     'mW': line[4]
                 }
