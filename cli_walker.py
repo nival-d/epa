@@ -1,7 +1,9 @@
 import fabric
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+
+logger = logging.getLogger()
+
 class walker():
     def __init__(self, host_creds):
         self.host_creds = host_creds
@@ -12,10 +14,10 @@ class walker():
             raise Exception('Target host not present in the definition data')
 
         if self.host_creds[target_host].get('via'):
-            logging.info('detected a connection with a valid via.')
+            logger.info('detected a connection with a valid via.')
             gateway_conection = self.recursive_connector(self.host_creds[target_host]['via'])
 
-            logging.info('connecting via: {}'.format(gateway_conection))
+            logger.info('connecting via: {}'.format(gateway_conection))
             connection_handler = fabric.Connection(self.host_creds[target_host]['hostname'],
                                      user=self.host_creds[target_host]['username'],
                                      connect_kwargs = {'password': self.host_creds[target_host]['password'],
@@ -47,5 +49,5 @@ class walker():
         if not connection_handler:
             logging.error('Connection handler not defined: {}. reconnecting.'.format(connection_handler))
             connection_handler = self.recursive_connector(host)
-        logging.info('working with a connecting handler: {}'. format(connection_handler))
+        logger.info('Working with a connecting handler: {}'. format(connection_handler))
         return connection_handler.run(command, hide=True).stdout

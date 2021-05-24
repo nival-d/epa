@@ -3,7 +3,8 @@ import re
 import logging
 import time
 
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
+
 class endpointRegister():
     def __init__(self):
         self.interface_register = {}
@@ -15,6 +16,7 @@ class endpointRegister():
 
 
     def update_interface_register(self, device, interface):
+        logger.info('updating interface register: {} {}'. format(device, interface))
         if not self.interface_register.get(device):
             self.interface_register[device] = {}
 
@@ -25,6 +27,9 @@ class endpointRegister():
 
 
     def update_link_register(self, nodeA, ifaceA, nodeB, ifaceB, **kwargs):
+
+        logger.info('updating link register: {} {}, {} {}'.format(nodeA, ifaceA, nodeB, ifaceB, ))
+        logger.info('aux data: {}'.format(kwargs))
         self.link_register.append({
             'nodeA': nodeA,
             'ifaceA': ifaceA,
@@ -33,19 +38,20 @@ class endpointRegister():
             **kwargs})
 
 
-    def walker_init(self, host_details):
+    def walker_init(self, host_details: dict):
         self.host_details = host_details
         self.walker = cli_walker.walker(host_details)
         self.auth_init = True
 
 
-    def get_interface_details(self, host, interface):
+    def get_interface_details(self, host: str, interface: str) -> str:
+        logger.info('Preparing to perform a show interface: {}'. format(host, interface))
         show_interface_command = 'show interface {}'.format(interface)
         interface_details = self.walker.execute(host, show_interface_command)
         return interface_details
 
 
-    def iface_status_assessment(self, line):
+    def iface_status_assessment(self, line: str) -> str:
         detected_statuses = []
         valid_statutes = ['up', 'down', 'administratively down']
         for status in valid_statutes:
@@ -60,26 +66,30 @@ class endpointRegister():
                 raise Exception('cannot detect interface status: {}'.format(line))
 
 
-    def get_iface_status(self, host, interface):
+    def get_iface_status(self, host: str, interface: str) -> str:
         output = self.get_interface_details(host, interface)
         magic_line = output.split('\n')[3]
         status = self.iface_status_assessment(magic_line)
         return status
 
 
-    def get_controllers_details(self, host, interface):
+    def get_xrcontrollers_details(self, host: str, interface: str) -> str:
+        logger.info('Preparing to perform a show controllers: {} {}'. format(host, interface))
         show_controllers_command = 'show controllers {}'.format(interface)
         controllers_data = self.walker.execute(host, show_controllers_command)
         return controllers_data
 
 
-    def get_controllers_phy_details(self, host, interface):
+    def get_xrcontrollers_phy_details(self, host: str, interface: str) -> str:
+        logger.info('Preparing to perform a show controllers phy: {}'. format(host, interface))
         show_controllers_command = 'show controllers {} phy'.format(interface)
         controllers_data = self.walker.execute(host, show_controllers_command)
         return controllers_data
 
 
-    def perLane_transformer(self, data, direction):
+    def perLane_transformer(self, data, direction: str) -> dict:
+        logger.info('Extracting per lane power details in direction: {}'. format(direction))
+        logger.debug('Raw_data: {}'. format(data))
         result = {}
         for line in iter(data):
             if line[1] == direction:
@@ -87,6 +97,7 @@ class endpointRegister():
                          'dBm': line[3],
                          'mW': line[2]
                 }
+        logger.debug('Transformed data: {}'. format(result))
         return result
 
 
@@ -100,10 +111,11 @@ class endpointRegister():
             return None
 
 
-    def _simplified_power_summariser(self, data, direction):
+    def _simplified_power_summariser(self, data: list, direction: str) -> dict:
         import math
-        print('Landed in a simplified power summariser')
-        print(data)
+        logger.info('Landed in a simplified power summariser')
+        logger.debug('raw data: {}'.format(data))
+        logger.debug('direction: {}'. format(direction))
         lane_mW_data = []
         for line in iter(data):
             if direction == 'Tx':
@@ -114,20 +126,23 @@ class endpointRegister():
                 raise Exception('unknown direction: {}'. format(direction))
         float_data = [float(x) for x in lane_mW_data]
         total_mW = sum(float_data)
-        total_dBm = 10*math.log10(total_mW/0.001)
+        total_dBm = 10*math.log10(total_mW)
+        logger.debug('total_mW: {}'. format(total_mW))
+        logger.debug('total_dBm: {}'. format(total_dBm))
         return {'dBm':total_dBm, 'mW': total_mW}
 
 
-    def _simplified_perLane_transformer(self, data, direction):
-        print('Started the per lane power transformer')
-        print(data)
+    def _simplified_perLane_transformer(self, data: list, direction: str) -> dict:
+        logger.info('Started the per lane power transformer')
+        logger.debug('raw data: {}'.format(data))
+        logger.debug('direction: {}'.format(direction))
         result = {}
         for line in iter(data):
             result[line[0]] = {}
             if direction == 'Tx':
                 result[line[0]] = {
-                    'dBm': line[2],
-                    'mW': line[3]
+                    'dBm': line[1],
+                    'mW': line[2]
                 }
             elif direction == 'Rx':
                 result[line[0]] = {
@@ -136,11 +151,13 @@ class endpointRegister():
                 }
             else:
                 raise Exception('unknown direction: {}'. format(direction))
-        print(result)
+        logger.debug('Transformed_result: {}'.format(result))
         return result
 
 
-    def xr_precise_controllers_parsing(self, data):
+    def xr_precise_controllers_parsing(self, data: str) -> dict:
+        logger.debug('Starting a precise parsing process')
+        logger.debug('raw data:{}'. format(data))
         txTotalre = '^Total Tx power:\s(?P<mWTxPower>\S*)\s*\S*\s\(\s*(?P<dBmTxPower>[\-\d\.]*)\sdBm\)'
         rxTotalre = '^Total Rx power:\s(?P<mWRxPower>\S*)\s*\S*\s\(\s*(?P<dBmRxPower>[\-\d\.]*)\sdBm\)'
         perLanere = '^\s*Lane\s(?P<lane>\d)\s(?P<direction>\S*)\spower:\s(?P<mWpower>\S*)\s\S*\s*\(\s*(?P<dBmPower>[\d\.\-]*)\sdBm\)'
@@ -164,10 +181,11 @@ class endpointRegister():
         }
         return transformed_data
 
-    def xr_simplified_controllers_parsing(self, data):
-        perLanere = '^\s*(?P<laneNumber>\d)\s+\S*\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>[\d\.\-]*)\s+(?P<dBmRxPower>[\d\.\-]+)\s*(?P<mWRxPower>[\d\.\-]+)\s+(?P<laserBias>[\d\.\-]+)'
+    def xr_simplified_controllers_parsing(self, data) -> dict:
+        logger.debug('Starting a simplified parsing process')
+        logger.debug('raw data:{}'. format(data))
+        perLanere = '^\s*(?P<laneNumber>\d)\s+\S+\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>[\d\.\-]*)\s+(?P<dBmRxPower>[\d\.\-]+)\s*(?P<mWRxPower>[\d\.\-]+)\s+(?P<laserBias>[\d\.\-]{3,})'
         perLane_data = re.findall(perLanere, data, re.MULTILINE)
-        print(perLane_data)
         transformed_data = {
             'Tx':
                 {'total': self._simplified_power_summariser(perLane_data, 'Tx'),
@@ -176,27 +194,29 @@ class endpointRegister():
                 {'total': self._simplified_power_summariser(perLane_data, 'Rx'),
                 'per_lane': self._simplified_perLane_transformer(perLane_data, 'Rx')}
         }
+        logger.debug('final_data: {}'.format(transformed_data))
         return transformed_data
 
-    def _simplified_xr_power_extractor(self, device, interface):
-        ddata = self.get_controllers_details(device, interface)
+    def _simplified_xr_power_extractor(self, device: str, interface: str) -> dict:
+        ddata = self.get_xrcontrollers_details(device, interface)
         power_data = self.xr_simplified_controllers_parsing(ddata)
         return power_data
 
-    def _precise_xr_power_extractor(self, device, interface):
-        ddata = self.get_controllers_phy_details(device, interface)
+
+    def _precise_xr_power_extractor(self, device: str, interface: str) -> dict:
+        ddata = self.get_xrcontrollers_phy_details(device, interface)
         power_data = self.xr_precise_controllers_parsing(ddata)
         return power_data
 
-    def interface_processor_selector(self, device_trait):
+    def interface_processor_selector(self, device_trait: str):
         local_function_register = {
-            'simplified': self._simplified_xr_power_extractor,
-            'precise': self._precise_xr_power_extractor
+            'xrsimplified': self._simplified_xr_power_extractor,
+            'xrprecise': self._precise_xr_power_extractor
         }
         return local_function_register[device_trait]
 
 
-    def interface_power_getter(self):
+    def interface_power_getter(self) -> None:
         for device in self.interface_register.keys():
             device_phy_capabilities = self.host_details[device]['phy_capabilities']
             device_interface_processor = self.interface_processor_selector(device_phy_capabilities)
@@ -207,25 +227,30 @@ class endpointRegister():
                 time.sleep(self.sleep_timer)
 
 
-    def _unidirectional_attenuation_calculator(self, Tx_data, Rx_data):
+    def _unidirectional_attenuation_calculator(self, Tx_data: dict, Rx_data: dict) -> dict:
         assert bool(Tx_data['total']) == bool(Rx_data['total'])
         assert len(Tx_data['per_lane']) == len(Rx_data['per_lane'])
+        logger.debug('Calculating attenuation')
+        logger.debug('Tx_data: {}'. format(Tx_data))
+        logger.debug('Rx_data: {}'. format(Rx_data))
         total_attenuation_dB = float(Tx_data['total']['dBm']) - float(Rx_data['total']['dBm'])
         total_attenuation_mW = float(Tx_data['total']['mW']) - float(Rx_data['total']['mW'])
         per_lane_attenuation = {}
         for laneNum in Tx_data['per_lane'].keys():
             per_lane_attenuation_dBm = float(Tx_data['per_lane'][laneNum]['dBm']) - float(Rx_data['per_lane'][laneNum]['dBm'])
             per_lane_attenuation_mW = float(Tx_data['per_lane'][laneNum]['mW']) - float(Rx_data['per_lane'][laneNum]['mW'])
-            per_lane_attenuation[laneNum]= {'dBm': per_lane_attenuation_dBm,
+            per_lane_attenuation[laneNum]= {'dB': per_lane_attenuation_dBm,
                                             'mW': per_lane_attenuation_mW,
                                             }
-        return {'total':
+        result = {'total':
                     {'dB': total_attenuation_dB,
                     'mW': total_attenuation_mW},
                 'per_lane': per_lane_attenuation
                 }
+        logger.debug('result: {}'. format(result))
+        return result
 
-    def _per_link_attenuation_caliculator(self, link_data):
+    def _per_link_attenuation_caliculator(self, link_data: dict) -> None:
         nodeATx = self.interface_register[link_data['nodeA']][link_data['ifaceA']]['power_data']['Tx']
         nodeBRx = self.interface_register[link_data['nodeB']][link_data['ifaceB']]['power_data']['Rx']
         link_data['attenuation'] = {}
@@ -237,22 +262,6 @@ class endpointRegister():
 
 
 
-    def attenuation_calculator(self):
+    def attenuation_calculator(self) -> None:
         for i in self.link_register:
             self._per_link_attenuation_caliculator(i)
-
-
-    def reporter(self):
-        for link in self.link_register:
-            print('############')
-            print('Endpoint A: {} {}'. format(link['nodeA'], link['ifaceA']))
-            print('Endpoint B: {} {}'. format(link['nodeB'], link['ifaceB']))
-            print('#####')
-            print('Total attenuation across lanes :')
-            print('from A to B:     {:4s} dB'.format(str(round(link['attenuation']['AtoB']['total']['dB']))))
-            print('from B to A:     {:4s} dB'.format(str(round(link['attenuation']['BtoA']['total']['dB']))))
-            print('delta:           {:4s} dB'.format(str(abs(round(link['attenuation']['AtoB']['total']['dB'] -
-                                                                   link['attenuation']['BtoA']['total']['dB'], 2)))))
-
-
-
