@@ -1,5 +1,10 @@
 import pytest
 import power_analyser
+import os
+
+SAMPLE_DATA_DIR = 'sample_data'
+
+
 
 @pytest.fixture()
 def wrapper():
@@ -121,8 +126,9 @@ def test_xr_simplified_controllers_parsing(wrapper):
 
 
 def test_parsing_sample_output_simple_power_sample2(wrapper):
-    test_file = 'tests/sample_data/power_sample2'
-    with open(test_file, 'r') as fh:
+    test_file = 'power_sample2'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
         data = fh.read()
         result = wrapper.xr_precise_controllers_parsing(data)
         # a physically painful section
@@ -139,8 +145,9 @@ def test_parsing_sample_output_simple_power_sample2(wrapper):
 
 
 def test_parsing_sample_output_simple_power_sample3(wrapper):
-    test_file = 'tests/sample_data/power_sample3'
-    with open(test_file, 'r') as fh:
+    test_file = 'power_sample3'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
         data = fh.read()
         result = wrapper.xr_simplified_controllers_parsing(data)
         # a physically painful section
@@ -154,3 +161,7 @@ def test_parsing_sample_output_simple_power_sample3(wrapper):
         assert result['Rx']['per_lane']['3']['dBm'] == '-6.2'
         assert result['Rx']['per_lane']['3']['mW'] == '0.6707'
         assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+
+
