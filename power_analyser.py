@@ -252,7 +252,7 @@ class endpointRegister():
         logger.debug('result: {}'. format(result))
         return result
 
-    def _per_link_attenuation_caliculator(self, link_data: dict) -> None:
+    def _per_link_attenuation_calculator(self, link_data: dict) -> None:
         nodeATx = self.interface_register[link_data['nodeA']][link_data['ifaceA']]['power_data']['Tx']
         nodeBRx = self.interface_register[link_data['nodeB']][link_data['ifaceB']]['power_data']['Rx']
         link_data['attenuation'] = {}
@@ -266,4 +266,4 @@ class endpointRegister():
 
     def attenuation_calculator(self) -> None:
         for i in self.link_register:
-            self._per_link_attenuation_caliculator(i)
+            self._per_link_attenuation_calculator(i)
