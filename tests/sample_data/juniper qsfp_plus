@@ -1,0 +1,55 @@
+Physical interface: et-3/0/0
+    Module temperature                        :  33 degrees C / 92 degrees F
+    Module voltage                            :  3.3060 V
+  Lane 0
+    Laser bias current                        :  7.182 mA
+    Laser receiver power                      :  0.743 mW / -1.29 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Rx loss of signal alarm                   :  Off
+  Lane 1
+    Laser bias current                        :  7.326 mA
+    Laser receiver power                      :  0.752 mW / -1.24 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Rx loss of signal alarm                   :  Off
+  Lane 2
+    Laser bias current                        :  7.447 mA
+    Laser receiver power                      :  0.790 mW / -1.03 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Rx loss of signal alarm                   :  Off
+  Lane 3
+    Laser bias current                        :  7.734 mA
+    Laser receiver power                      :  0.768 mW / -1.15 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Rx loss of signal alarm                   :  Off

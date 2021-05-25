@@ -1,0 +1,163 @@
+Physical interface: et-4/1/0
+    Module temperature                        :  38 degrees C / 101 degrees F
+    Module voltage                            :  3.2500 V
+    Module temperature high alarm             :  Off
+    Module temperature low alarm              :  Off
+    Module temperature high warning           :  Off
+    Module temperature low warning            :  Off
+    Module voltage high alarm                 :  Off
+    Module voltage low alarm                  :  Off
+    Module voltage high warning               :  Off
+    Module voltage low warning                :  Off
+    Module not ready alarm                    :  Off
+    Module low power alarm                    :  Off
+    Module initialization incomplete alarm    :  Off
+    Module fault alarm                        :  Off
+    PLD Flash initialization fault alarm      :  Off
+    Power supply fault alarm                  :  Off
+    Checksum fault alarm                      :  Off
+    Tx laser disabled alarm                   :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Tx CDR loss of lock alarm                 :  Off
+    Rx loss of signal alarm                   :  Off
+    Rx CDR loss of lock alarm                 :  Off
+    Module temperature high alarm threshold   :  75 degrees C / 167 degrees F
+    Module temperature low alarm threshold    :  -5 degrees C / 23 degrees F
+    Module temperature high warning threshold :  70 degrees C / 158 degrees F
+    Module temperature low warning threshold  :  0 degrees C / 32 degrees F
+    Module voltage high alarm threshold       :  3.5000 V
+    Module voltage low alarm threshold        :  3.0990 V
+    Module voltage high warning threshold     :  3.4000 V
+    Module voltage low warning threshold      :  3.2000 V
+    Laser bias current high alarm threshold   :  250.000 mA
+    Laser bias current low alarm threshold    :  37.500 mA
+    Laser bias current high warning threshold :  225.000 mA
+    Laser bias current low warning threshold  :  50.000 mA
+    Laser output power high alarm threshold   :  3.9800 mW / 6.00 dBm
+    Laser output power low alarm threshold    :  0.4670 mW / -3.31 dBm
+    Laser output power high warning threshold :  3.5480 mW / 5.50 dBm
+    Laser output power low warning threshold  :  0.5240 mW / -2.81 dBm
+    Laser rx power high alarm threshold       :  3.5481 mW / 5.50 dBm
+    Laser rx power low alarm threshold        :  0.0616 mW / -12.10 dBm
+    Laser rx power high warning threshold     :  3.1622 mW / 5.00 dBm
+    Laser rx power low warning threshold      :  0.0691 mW / -11.61 dBm
+    Laser temperature high alarm threshold    :  67 degrees C / 153 degrees F
+    Laser temperature low alarm threshold     :  35 degrees C / 95 degrees F
+    Laser temperature high warning threshold  :  62 degrees C / 144 degrees F
+    Laser temperature low warning threshold   :  40 degrees C / 104 degrees F
+    SOA bias current high alarm threshold     :  0.000 mA
+    SOA bias current low alarm threshold      :  0.000 mA
+    SOA bias current high warning threshold   :  0.000 mA
+    SOA bias current low warning threshold    :  0.000 mA
+  Lane 0
+    Laser bias current                        :  131.684 mA
+    Laser output power                        :  1.002 mW / 0.01 dBm
+    Laser temperature                         :  54 degrees C / 128 degrees F
+    Laser receiver power                      :  0.497 mW / -3.03 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser output power high alarm             :  Off
+    Laser output power low alarm              :  Off
+    Laser output power high warning           :  Off
+    Laser output power low warning            :  Off
+    Laser temperature high alarm              :  Off
+    Laser temperature low alarm               :  Off
+    Laser temperature high warning            :  Off
+    Laser temperature low warning             :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Tx CDR loss of lock alarm                 :  Off
+    Rx loss of signal alarm                   :  Off
+    Rx CDR loss of lock alarm                 :  Off
+    APD supply fault alarm                    :  Off
+    TEC fault alarm                           :  Off
+    Wavelength unlocked alarm                 :  Off
+  Lane 1
+    Laser bias current                        :  122.345 mA
+    Laser output power                        :  1.002 mW / 0.01 dBm
+    Laser temperature                         :  51 degrees C / 124 degrees F
+    Laser receiver power                      :  0.611 mW / -2.14 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser output power high alarm             :  Off
+    Laser output power low alarm              :  Off
+    Laser output power high warning           :  Off
+    Laser output power low warning            :  Off
+    Laser temperature high alarm              :  Off
+    Laser temperature low alarm               :  Off
+    Laser temperature high warning            :  Off
+    Laser temperature low warning             :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Tx CDR loss of lock alarm                 :  Off
+    Rx loss of signal alarm                   :  Off
+    Rx CDR loss of lock alarm                 :  Off
+    APD supply fault alarm                    :  Off
+    TEC fault alarm                           :  Off
+    Wavelength unlocked alarm                 :  Off
+  Lane 2
+    Laser bias current                        :  112.819 mA
+    Laser output power                        :  1.000 mW / 0.00 dBm
+    Laser temperature                         :  50 degrees C / 122 degrees F
+    Laser receiver power                      :  0.540 mW / -2.67 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser output power high alarm             :  Off
+    Laser output power low alarm              :  Off
+    Laser output power high warning           :  Off
+    Laser output power low warning            :  Off
+    Laser temperature high alarm              :  Off
+    Laser temperature low alarm               :  Off
+    Laser temperature high warning            :  Off
+    Laser temperature low warning             :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Tx CDR loss of lock alarm                 :  Off
+    Rx loss of signal alarm                   :  Off
+    Rx CDR loss of lock alarm                 :  Off
+    APD supply fault alarm                    :  Off
+    TEC fault alarm                           :  Off
+    Wavelength unlocked alarm                 :  Off
+  Lane 3
+    Laser bias current                        :  100.735 mA
+    Laser output power                        :  1.002 mW / 0.01 dBm
+    Laser temperature                         :  50 degrees C / 122 degrees F
+    Laser receiver power                      :  0.637 mW / -1.96 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser output power high alarm             :  Off
+    Laser output power low alarm              :  Off
+    Laser output power high warning           :  Off
+    Laser output power low warning            :  Off
+    Laser temperature high alarm              :  Off
+    Laser temperature low alarm               :  Off
+    Laser temperature high warning            :  Off
+    Laser temperature low warning             :  Off
+    Laser receiver power high alarm           :  Off
+    Laser receiver power low alarm            :  Off
+    Laser receiver power high warning         :  Off
+    Laser receiver power low warning          :  Off
+    Tx loss of signal functionality alarm     :  Off
+    Tx CDR loss of lock alarm                 :  Off
+    Rx loss of signal alarm                   :  Off
+    Rx CDR loss of lock alarm                 :  Off
+    APD supply fault alarm                    :  Off
+    TEC fault alarm                           :  Off
+    Wavelength unlocked alarm                 :  Off
