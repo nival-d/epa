@@ -5,6 +5,12 @@ import time
 
 logger = logging.getLogger()
 
+JUNIPER_CFP_RE = '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
+                 '\s*:\s*(?P<TxmWPower>\S*)\s*\w*\s\/\s*(?P<TxdBPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
+                 '(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n'
+JUNIPER_QSFP_RE = '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
+                  'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)'
+
 class endpointRegister():
     def __init__(self):
         self.interface_register = {}
@@ -131,15 +137,34 @@ class endpointRegister():
         logger.debug('total_dBm: {}'. format(total_dBm))
         return {'dBm':total_dBm, 'mW': total_mW}
 
+    def lane_notation_mode_selector(self, lane_numbers: list) ->str:
+        int_numbers = [int(x) for x in lane_numbers]
+        int_numbers.sort()
+        if int_numbers[0] == 0:
+            return 'from_zero'
+        elif int_numbers[0] == 1:
+            return 'from_one'
+        else:
+            raise Exception('Unaccounted lane numbering: {}'.format(lane_numbers))
+
+    def lane_num_equaliser(self, lane_num, mode):
+        if mode == 'from_zero':
+            return lane_num
+        elif mode == 'from_one':
+            return str(int(lane_num) - 1)
+        else:
+            raise Exception('Bad mode: {}'.format(mode))
 
     def _simplified_perLane_transformer(self, data: list, direction: str) -> dict:
         logger.info('Started the per lane power transformer')
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'.format(direction))
         result = {}
+        lane_numbers = [x[0] for x in iter(data)]
+        lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
         for line in iter(data):
-            # we count lanes from 0. Cisco software is inconsistent. Normalizing now.
-            lane_num = str(int(line[0]) - 1)
+            # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
+            lane_num = self.lane_num_equaliser(line[0], lane_notation_mode)
             result[lane_num] = {}
             if direction == 'Tx':
                 result[lane_num] = {
@@ -235,12 +260,14 @@ class endpointRegister():
         logger.debug('Calculating attenuation')
         logger.debug('Tx_data: {}'. format(Tx_data))
         logger.debug('Rx_data: {}'. format(Rx_data))
-        total_attenuation_dB = float(Tx_data['total']['dBm']) - float(Rx_data['total']['dBm'])
-        total_attenuation_mW = float(Tx_data['total']['mW']) - float(Rx_data['total']['mW'])
+        total_attenuation_dB = str(round(float(Tx_data['total']['dBm']) - float(Rx_data['total']['dBm']), 2))
+        total_attenuation_mW = str(round(float(Tx_data['total']['mW']) - float(Rx_data['total']['mW']), 2))
         per_lane_attenuation = {}
         for laneNum in Tx_data['per_lane'].keys():
-            per_lane_attenuation_dBm = float(Tx_data['per_lane'][laneNum]['dBm']) - float(Rx_data['per_lane'][laneNum]['dBm'])
-            per_lane_attenuation_mW = float(Tx_data['per_lane'][laneNum]['mW']) - float(Rx_data['per_lane'][laneNum]['mW'])
+            per_lane_attenuation_dBm = str(round(float(Tx_data['per_lane'][laneNum]['dBm']) -
+                                             float(Rx_data['per_lane'][laneNum]['dBm']), 2))
+            per_lane_attenuation_mW = str(round(float(Tx_data['per_lane'][laneNum]['mW']) -
+                                            float(Rx_data['per_lane'][laneNum]['mW']), 2))
             per_lane_attenuation[laneNum]= {'dB': per_lane_attenuation_dBm,
                                             'mW': per_lane_attenuation_mW,
                                             }
@@ -252,18 +279,19 @@ class endpointRegister():
         logger.debug('result: {}'. format(result))
         return result
 
+
     def _per_link_attenuation_calculator(self, link_data: dict) -> None:
         nodeATx = self.interface_register[link_data['nodeA']][link_data['ifaceA']]['power_data']['Tx']
         nodeBRx = self.interface_register[link_data['nodeB']][link_data['ifaceB']]['power_data']['Rx']
         link_data['attenuation'] = {}
         link_data['attenuation']['AtoB'] = self._unidirectional_attenuation_calculator(nodeATx, nodeBRx)
-
         nodeBTx = self.interface_register[link_data['nodeB']][link_data['ifaceB']]['power_data']['Tx']
         nodeARx = self.interface_register[link_data['nodeA']][link_data['ifaceA']]['power_data']['Rx']
         link_data['attenuation']['BtoA'] = self._unidirectional_attenuation_calculator(nodeBTx, nodeARx)
 
 
-
     def attenuation_calculator(self) -> None:
         for i in self.link_register:
             self._per_link_attenuation_calculator(i)
+
+
