@@ -135,7 +135,8 @@ class endpointRegister():
         total_dBm = 10*math.log10(total_mW)
         logger.debug('total_mW: {}'. format(total_mW))
         logger.debug('total_dBm: {}'. format(total_dBm))
-        return {'dBm':total_dBm, 'mW': total_mW}
+        return {'dBm':str(round(total_dBm, 2)), 'mW': str(round(total_mW, 4))}
+
 
     def lane_notation_mode_selector(self, lane_numbers: list) ->str:
         int_numbers = [int(x) for x in lane_numbers]
@@ -147,6 +148,7 @@ class endpointRegister():
         else:
             raise Exception('Unaccounted lane numbering: {}'.format(lane_numbers))
 
+
     def lane_num_equaliser(self, lane_num, mode):
         if mode == 'from_zero':
             return lane_num
@@ -154,6 +156,7 @@ class endpointRegister():
             return str(int(lane_num) - 1)
         else:
             raise Exception('Bad mode: {}'.format(mode))
+
 
     def _simplified_perLane_transformer(self, data: list, direction: str) -> dict:
         logger.info('Started the per lane power transformer')
@@ -261,13 +264,13 @@ class endpointRegister():
         logger.debug('Tx_data: {}'. format(Tx_data))
         logger.debug('Rx_data: {}'. format(Rx_data))
         total_attenuation_dB = str(round(float(Tx_data['total']['dBm']) - float(Rx_data['total']['dBm']), 2))
-        total_attenuation_mW = str(round(float(Tx_data['total']['mW']) - float(Rx_data['total']['mW']), 2))
+        total_attenuation_mW = str(round(float(Tx_data['total']['mW']) - float(Rx_data['total']['mW']), 4))
         per_lane_attenuation = {}
         for laneNum in Tx_data['per_lane'].keys():
             per_lane_attenuation_dBm = str(round(float(Tx_data['per_lane'][laneNum]['dBm']) -
                                              float(Rx_data['per_lane'][laneNum]['dBm']), 2))
             per_lane_attenuation_mW = str(round(float(Tx_data['per_lane'][laneNum]['mW']) -
-                                            float(Rx_data['per_lane'][laneNum]['mW']), 2))
+                                            float(Rx_data['per_lane'][laneNum]['mW']), 4))
             per_lane_attenuation[laneNum]= {'dB': per_lane_attenuation_dBm,
                                             'mW': per_lane_attenuation_mW,
                                             }

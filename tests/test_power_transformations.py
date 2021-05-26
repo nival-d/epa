@@ -104,8 +104,8 @@ def test_xr_simplified_controllers_parsing(wrapper):
 
     result = wrapper.xr_simplified_controllers_parsing(data)
 
-    assert str(round(result['Tx']['total']['mW'], 4)) == '6.7216'
-    assert str(round(result['Rx']['total']['mW'], 4)) == '1.1335'
+    assert result['Tx']['total']['mW'] == '6.7216'
+    assert result['Rx']['total']['mW'] == '1.1335'
 
     # a physically painful section
     assert result['Tx']['per_lane']['0']['dBm'] == '2.2'
@@ -273,6 +273,7 @@ def test_lane_num_equaliser2(wrapper):
     assert new_lane_array == ['0', '1', '2', '3']
 
 
+
 def test_attenutation_calculation_1(wrapper):
     file1 = 'power_sample1'
     file2 = 'power_sample2'
@@ -300,4 +301,35 @@ def test_attenutation_calculation_1(wrapper):
     assert BtoA['per_lane']['0']['mW'] == '0.26'
     assert BtoA['per_lane']['3']['dB'] == '4.05'
     assert BtoA['per_lane']['3']['mW'] == '1.1'
+
+
+def test_attenutation_calculation_2(wrapper):
+    file1 = 'power_sample1'
+    file2 = 'power_sample3'
+    test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+    test_file_path2 = os.path.join('tests', SAMPLE_DATA_DIR, file2)
+    with open(test_file_path1, 'r') as fh:
+        data = fh.read()
+        power_dataA = wrapper.xr_precise_controllers_parsing(data)
+    with open(test_file_path2, 'r') as fh:
+        data = fh.read()
+        power_dataB = wrapper.xr_simplified_controllers_parsing(data)
+    AtoB = wrapper._unidirectional_attenuation_calculator(power_dataA['Tx'], power_dataB['Rx'])
+    #assessment against manual calculations
+    print(power_dataB['Tx'])
+    print(power_dataA['Rx'])
+    assert AtoB['total']['dB'] == '4.11'
+    assert AtoB['total']['mW'] == '1.7765'
+    assert AtoB['per_lane']['0']['dB'] == '-0.2'
+    assert AtoB['per_lane']['0']['mW'] == '0.4662'
+    assert AtoB['per_lane']['3']['dB'] == '4.89'
+    assert AtoB['per_lane']['3']['mW'] == '0.0693'
+    BtoA = wrapper._unidirectional_attenuation_calculator(power_dataB['Tx'], power_dataA['Rx'])
+    # assessment against manual calculations
+    assert BtoA['total']['dB'] == '2.13'
+    assert BtoA['total']['mW'] == '2.6116'
+    assert BtoA['per_lane']['0']['dB'] == '1.14'
+    assert BtoA['per_lane']['0']['mW'] == '0.3969'
+    assert BtoA['per_lane']['3']['dB'] == '4.28'
+    assert BtoA['per_lane']['3']['mW'] == '1.185'
 
