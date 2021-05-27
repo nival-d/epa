@@ -179,9 +179,9 @@ class endpointRegister():
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'.format(direction))
         result = {}
-        lane_numbers = [x[0] for x in iter(data)]
+        lane_numbers = [x[0] for x in data]
         lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
-        for line in iter(data):
+        for line in data:
             # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
             lane_num = self.lane_num_equaliser(line[0], lane_notation_mode)
             result[lane_num] = {}
@@ -202,7 +202,14 @@ class endpointRegister():
 
 
     def _junos_perLane_transformet(self, data: list, direction: str):
-        pass
+        logger.info('Started the per lane power transformer')
+        logger.debug('raw data: {}'.format(data))
+        logger.debug('direction: {}'.format(direction))
+        result = {}
+        lane_numbers = [x['laneNum'] for x in iter(data)]
+        lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
+
+
 
     def xr_precise_controllers_parsing(self, data: str) -> dict:
         logger.debug('Starting a precise parsing process')
