@@ -191,7 +191,7 @@ def test_parsing_sample_output_simple_power_sample3(wrapper):
 
 
 def test_juniper_cfp_output(wrapper):
-    test_re = power_analyser.JUNIPER_CFP_RE
+    test_re = power_analyser.JUNIPER_CFP_RE[1]
     test_file = 'juniper_cfp'
     test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
     with open(test_file_path, 'r') as fh:
@@ -207,7 +207,7 @@ def test_juniper_cfp_output(wrapper):
 
 
 def test_juniper_qsfp_output(wrapper):
-    test_re = power_analyser.JUNIPER_CFP_RE
+    test_re = power_analyser.JUNIPER_CFP_RE[1]
     test_file = 'juniper_cfp'
     test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
     with open(test_file_path, 'r') as fh:
@@ -332,4 +332,39 @@ def test_attenutation_calculation_2(wrapper):
     assert BtoA['per_lane']['0']['mW'] == '0.3969'
     assert BtoA['per_lane']['3']['dB'] == '4.28'
     assert BtoA['per_lane']['3']['mW'] == '1.185'
+
+
+def test_junos_generic_diagnostics_optics_parsing1(wrapper):
+    file1 = 'juniper_qsfp_plus'
+    test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+    with open(test_file_path1, 'r') as fh:
+        data = fh.read()
+    result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+    assert result['Tx']['per_lane']['0']['dBm'] == None
+    assert result['Tx']['per_lane']['0']['mW'] == None
+    assert result['Tx']['per_lane']['3']['dBm'] == None
+    assert result['Tx']['per_lane']['3']['mW'] == None
+    assert len(result['Tx']['per_lane'].keys()) == 4
+    assert result['Rx']['per_lane']['0']['dBm'] == '-1.29'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.743'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-1.15'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.768'
+    assert len(result['Rx']['per_lane'].keys()) == 4
+
+    def test_junos_generic_diagnostics_optics_parsing2(wrapper):
+        file1 = 'juniper_cfp'
+        test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+        with open(test_file_path1, 'r') as fh:
+            data = fh.read()
+        result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+        assert result['Tx']['per_lane']['0']['dBm'] == '0.01'
+        assert result['Tx']['per_lane']['0']['mW'] == '1.002'
+        assert result['Tx']['per_lane']['3']['dBm'] == '0.01'
+        assert result['Tx']['per_lane']['3']['mW'] == '1.002'
+        assert len(result['Tx']['per_lane'].keys()) == 4
+        assert result['Rx']['per_lane']['0']['dBm'] == '-3.03'
+        assert result['Rx']['per_lane']['0']['mW'] == '0.497'
+        assert result['Rx']['per_lane']['3']['dBm'] == '-1.96'
+        assert result['Rx']['per_lane']['3']['mW'] == '0.637'
+        assert len(result['Rx']['per_lane'].keys()) == 4
 

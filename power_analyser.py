@@ -154,6 +154,35 @@ class endpointRegister():
         return {'dBm':str(round(total_dBm, 2)), 'mW': str(round(total_mW, 4))}
 
 
+
+    def _junos_power_summariser(self, data: list, direction: str) -> dict:
+        import math
+        logger.info('Landed in a junos power summariser')
+        logger.debug('raw data: {}'.format(data))
+        logger.debug('direction: {}'. format(direction))
+        lane_mW_data = []
+        for line in iter(data):
+            if direction == 'Tx':
+                lane_mW_data.append(line.get('TxmWPower'))
+            elif direction == 'Rx':
+                lane_mW_data.append(line.get('RxmWPower'))
+            else:
+                raise Exception('Unknown direction: {}'. format(direction))
+        if all(lane_mW_data):
+            float_data = [float(x) for x in lane_mW_data]
+            total_mW = sum(float_data)
+            total_dBm = 10*math.log10(total_mW)
+            return_total_mW = str(round(total_dBm, 2))
+            return_total_dBm = str(round(total_mW, 4))
+        else:
+            return_total_mW = None
+            return_total_dBm = None
+        logger.debug('total_mW: {}'. format(return_total_mW))
+        logger.debug('total_dBm: {}'. format(return_total_dBm))
+        return {'dBm': return_total_mW,
+                'mW': return_total_dBm}
+
+
     def lane_notation_mode_selector(self, lane_numbers: list) ->str:
         int_numbers = [int(x) for x in lane_numbers]
         int_numbers.sort()
@@ -201,14 +230,31 @@ class endpointRegister():
         return result
 
 
-    def _junos_perLane_transformet(self, data: list, direction: str):
+    def _junos_perLane_transformer(self, data: list, direction: str):
         logger.info('Started the per lane power transformer')
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'.format(direction))
         result = {}
         lane_numbers = [x['laneNum'] for x in iter(data)]
         lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
-
+        for line in data:
+            # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
+            lane_num = self.lane_num_equaliser(line['laneNum'], lane_notation_mode)
+            result[lane_num] = {}
+            if direction == 'Tx':
+                result[lane_num] = {
+                    'dBm': line.get('TxdBPower'),
+                    'mW': line.get('TxmWPower')
+                }
+            elif direction == 'Rx':
+                result[lane_num] = {
+                    'dBm': line.get('RxdBPower'),
+                    'mW': line.get('RxmWPower')
+                }
+            else:
+                raise Exception('unknown direction: {}'.format(direction))
+        logger.debug('Transformed_result: {}'.format(result))
+        return result
 
 
     def xr_precise_controllers_parsing(self, data: str) -> dict:
@@ -272,7 +318,16 @@ class endpointRegister():
         re_match_array = [bool(x) for x in extracted_data]
         if single_true(re_match_array):
             element_num = [i for i, x in enumerate(re_match_array) if x][0]
-            return extracted_data[element_num]
+            transformed_data = {
+                'Tx':
+                    {'total': self._junos_power_summariser(extracted_data[element_num], 'Tx'),
+                     'per_lane': self._junos_perLane_transformer(extracted_data[element_num], 'Tx')},
+                'Rx':
+                    {'total': self._junos_power_summariser(extracted_data[element_num], 'Rx'),
+                     'per_lane': self._junos_perLane_transformer(extracted_data[element_num], 'Rx')}
+            }
+            logger.debug('final_data: {}'.format(transformed_data))
+            return transformed_data
         else:
             raise Exception('Junos diagnostics output matched too many regexes')
 
