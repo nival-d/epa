@@ -5,11 +5,20 @@ import time
 
 logger = logging.getLogger()
 
-JUNIPER_CFP_RE = '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
+JUNIPER_CFP_RE = ('cfp_re', '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
                  '\s*:\s*(?P<TxmWPower>\S*)\s*\w*\s\/\s*(?P<TxdBPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
-                 '(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n'
-JUNIPER_QSFP_RE = '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
-                  'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)'
+                 '(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n')
+JUNIPER_QSFP_RE = ('qsfp_re', '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
+                  'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)')
+
+JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE]
+
+
+
+def single_true(iterable):
+    i = iter(iterable)
+    return any(i) and not any(i)
+
 
 class endpointRegister():
     def __init__(self):
@@ -89,6 +98,13 @@ class endpointRegister():
     def get_xrcontrollers_phy_details(self, host: str, interface: str) -> str:
         logger.info('Preparing to perform a show controllers phy: {}'. format(host, interface))
         show_controllers_command = 'show controllers {} phy'.format(interface)
+        controllers_data = self.walker.execute(host, show_controllers_command)
+        return controllers_data
+
+
+    def get_junos_disgnostics_details(self, host: str, interface: str) -> str:
+        logger.info('Preparing to perform a show controllers phy: {}'.format(host, interface))
+        show_controllers_command = 'show interfaces diagnostics optics {}'.format(interface)
         controllers_data = self.walker.execute(host, show_controllers_command)
         return controllers_data
 
@@ -185,6 +201,9 @@ class endpointRegister():
         return result
 
 
+    def _junos_perLane_transformet(self, data: list, direction: str):
+        pass
+
     def xr_precise_controllers_parsing(self, data: str) -> dict:
         logger.debug('Starting a precise parsing process')
         logger.debug('raw data:{}'. format(data))
@@ -227,6 +246,36 @@ class endpointRegister():
         logger.debug('final_data: {}'.format(transformed_data))
         return transformed_data
 
+    def iterator_to_dict(self, iterator):
+        data = []
+        for item in iterator:
+            data.append(item.groupdict())
+        return data
+
+    def junos_generic_diagnostics_optics_parsing(self, data: str) -> dict:
+        logger.debug('Starting a juniper generic parsing process')
+        logger.debug('raw data:{}'. format(data))
+        extracted_data = []
+        #doing the initial match against all juniper diagnostics patters
+        for juniper_re in JUNIPER_GENERIC_RES:
+            re_name = juniper_re[0]
+            pattern = juniper_re[1]
+            extract = re.finditer(pattern, data, re.MULTILINE|re.DOTALL)
+            extracted_data.append(self.iterator_to_dict(extract))
+        re_match_array = [bool(x) for x in extracted_data]
+        if single_true(re_match_array):
+            element_num = [i for i, x in enumerate(re_match_array) if x][0]
+            return extracted_data[element_num]
+        else:
+            raise Exception('Junos diagnostics output matched too many regexes')
+
+
+    def _generic_junos_power_extractor(self, device: str, interface: str) -> dict:
+        ddata = self.get_junos_disgnostics_details(device, interface)
+        power_data = self.junos_generic_diagnostics_optics_parsing(ddata)
+        return power_data
+
+
     def _simplified_xr_power_extractor(self, device: str, interface: str) -> dict:
         ddata = self.get_xrcontrollers_details(device, interface)
         power_data = self.xr_simplified_controllers_parsing(ddata)
@@ -238,10 +287,12 @@ class endpointRegister():
         power_data = self.xr_precise_controllers_parsing(ddata)
         return power_data
 
+
     def interface_processor_selector(self, device_trait: str):
         local_function_register = {
             'xrsimplified': self._simplified_xr_power_extractor,
-            'xrprecise': self._precise_xr_power_extractor
+            'xrprecise': self._precise_xr_power_extractor,
+            'junos_generic': self._generic_junos_power_extractor
         }
         return local_function_register[device_trait]
 
