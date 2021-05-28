@@ -351,20 +351,51 @@ def test_junos_generic_diagnostics_optics_parsing1(wrapper):
     assert result['Rx']['per_lane']['3']['mW'] == '0.768'
     assert len(result['Rx']['per_lane'].keys()) == 4
 
-    def test_junos_generic_diagnostics_optics_parsing2(wrapper):
-        file1 = 'juniper_cfp'
-        test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
-        with open(test_file_path1, 'r') as fh:
-            data = fh.read()
-        result = wrapper.junos_generic_diagnostics_optics_parsing(data)
-        assert result['Tx']['per_lane']['0']['dBm'] == '0.01'
-        assert result['Tx']['per_lane']['0']['mW'] == '1.002'
-        assert result['Tx']['per_lane']['3']['dBm'] == '0.01'
-        assert result['Tx']['per_lane']['3']['mW'] == '1.002'
-        assert len(result['Tx']['per_lane'].keys()) == 4
-        assert result['Rx']['per_lane']['0']['dBm'] == '-3.03'
-        assert result['Rx']['per_lane']['0']['mW'] == '0.497'
-        assert result['Rx']['per_lane']['3']['dBm'] == '-1.96'
-        assert result['Rx']['per_lane']['3']['mW'] == '0.637'
-        assert len(result['Rx']['per_lane'].keys()) == 4
+def test_junos_generic_diagnostics_optics_parsing2(wrapper):
+    file1 = 'juniper_cfp'
+    test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+    with open(test_file_path1, 'r') as fh:
+        data = fh.read()
+    result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+    assert result['Tx']['per_lane']['0']['dBm'] == '0.01'
+    assert result['Tx']['per_lane']['0']['mW'] == '1.002'
+    assert result['Tx']['per_lane']['3']['dBm'] == '0.01'
+    assert result['Tx']['per_lane']['3']['mW'] == '1.002'
+    assert len(result['Tx']['per_lane'].keys()) == 4
+    assert result['Rx']['per_lane']['0']['dBm'] == '-3.03'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.497'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-1.96'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.637'
+    assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+def test_attenutation_calculation_3(wrapper):
+    file1 = 'power_sample1'
+    file2 = 'juniper_cfp'
+    test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+    test_file_path2 = os.path.join('tests', SAMPLE_DATA_DIR, file2)
+    with open(test_file_path1, 'r') as fh:
+        data = fh.read()
+        power_dataA = wrapper.xr_precise_controllers_parsing(data)
+    with open(test_file_path2, 'r') as fh:
+        data = fh.read()
+        power_dataB = wrapper.junos_generic_diagnostics_optics_parsing(data)
+    AtoB = wrapper._unidirectional_attenuation_calculator(power_dataA['Tx'], power_dataB['Rx'])
+    #assessment against manual calculations
+    print(power_dataB['Tx'])
+    print(power_dataA['Rx'])
+    assert AtoB['total']['dB'] == '1.06'
+    assert AtoB['total']['mW'] == '0.625'
+    assert AtoB['per_lane']['0']['dB'] == '1.73'
+    assert AtoB['per_lane']['0']['mW'] == '0.243'
+    assert AtoB['per_lane']['3']['dB'] == '0.65'
+    assert AtoB['per_lane']['3']['mW'] == '0.103'
+    BtoA = wrapper._unidirectional_attenuation_calculator(power_dataB['Tx'], power_dataA['Rx'])
+    # assessment against manual calculations
+    assert BtoA['total']['dB'] == '-0.11'
+    assert BtoA['total']['mW'] == '-0.104'
+    assert BtoA['per_lane']['0']['dB'] == '-1.05'
+    assert BtoA['per_lane']['0']['mW'] == '-0.278'
+    assert BtoA['per_lane']['3']['dB'] == '1.49'
+    assert BtoA['per_lane']['3']['mW'] == '0.292'
 
