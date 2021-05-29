@@ -5,14 +5,20 @@ import time
 
 logger = logging.getLogger()
 
-JUNIPER_CFP_RE = ('cfp_re', '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
-                 '\s*:\s*(?P<TxmWPower>\S*)\s*\w*\s\/\s*(?P<TxdBPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
-                 '(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n')
-JUNIPER_QSFP_RE = ('qsfp_re', '^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
-                  'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)')
+JUNIPER_CFP_RE = ('cfp_re', r'^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
+                 r'\s*:\s*(?P<TxmWPower>\S*)\s*\w*\s\/\s*(?P<TxdBPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
+                 r'(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n')
+JUNIPER_QSFP_RE = ('qsfp_re', r'^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
+                  r'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)')
+JUNIPER_SFP_RE = ('sfp_re',r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power\s*:\s*'
+                           r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Receiver\ssignal\saverage\s'
+                           r'optical\spower\s*:\s*(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
+JUNIPER_XFP_RE = ('xfp_re', r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power\s*:\s*'
+                            r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
+                            r'(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
 
-JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE]
-
+JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE, JUNIPER_SFP_RE, JUNIPER_XFP_RE]
+ATTENUATION_INCALCULABLE_INDICATOR = 'N/A'
 
 
 def single_true(iterable):
@@ -184,14 +190,19 @@ class endpointRegister():
 
 
     def lane_notation_mode_selector(self, lane_numbers: list) ->str:
-        int_numbers = [int(x) for x in lane_numbers]
-        int_numbers.sort()
-        if int_numbers[0] == 0:
-            return 'from_zero'
-        elif int_numbers[0] == 1:
-            return 'from_one'
+        logger.error('Selecting optic lane notation mode, raw lane_numbers: {}'. format(lane_numbers))
+        if lane_numbers == [None]:
+            logger.info('Hit optics with a single lane')
+            return 'unnotated'
         else:
-            raise Exception('Unaccounted lane numbering: {}'.format(lane_numbers))
+            int_numbers = [int(x) for x in lane_numbers]
+            int_numbers.sort()
+            if int_numbers[0] == 0:
+                return 'from_zero'
+            elif int_numbers[0] == 1:
+                return 'from_one'
+            else:
+                raise Exception('Unaccounted lane numbering: {}'.format(lane_numbers))
 
 
     def lane_num_equaliser(self, lane_num, mode):
@@ -199,6 +210,8 @@ class endpointRegister():
             return lane_num
         elif mode == 'from_one':
             return str(int(lane_num) - 1)
+        elif mode == 'unnotated':
+            return '0'
         else:
             raise Exception('Bad mode: {}'.format(mode))
 
@@ -235,11 +248,13 @@ class endpointRegister():
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'.format(direction))
         result = {}
-        lane_numbers = [x['laneNum'] for x in iter(data)]
+        lane_numbers = [x.get('laneNum') for x in iter(data)]
+
+        logger.error(data)
         lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
         for line in data:
-            # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
-            lane_num = self.lane_num_equaliser(line['laneNum'], lane_notation_mode)
+            # we count lanes from 0. Some software is inconsistent. Normalizing now.
+            lane_num = self.lane_num_equaliser(line.get('laneNum'), lane_notation_mode)
             result[lane_num] = {}
             if direction == 'Tx':
                 result[lane_num] = {
@@ -305,6 +320,7 @@ class endpointRegister():
             data.append(item.groupdict())
         return data
 
+
     def junos_generic_diagnostics_optics_parsing(self, data: str) -> dict:
         logger.debug('Starting a juniper generic parsing process')
         logger.debug('raw data:{}'. format(data))
@@ -328,7 +344,16 @@ class endpointRegister():
             }
             logger.debug('final_data: {}'.format(transformed_data))
             return transformed_data
+        elif not any(re_match_array):
+            logger.error('Junos diagnostics output didn\'t match any regexes')
+            transformed_data = {
+                'Tx': None,
+                'Rx': None
+            }
+            logger.debug('final_data: {}'.format(transformed_data))
+            return transformed_data
         else:
+            logger.error(re_match_array)
             raise Exception('Junos diagnostics output matched too many regexes')
 
 
@@ -369,21 +394,35 @@ class endpointRegister():
                 self.interface_register[device][interface]['power_data'] = power_data
                 time.sleep(self.sleep_timer)
 
+    def safe_power_delta_calculator(self, Tx: str, Rx: str, accuracy=2) -> str:
+        if Tx and Rx:
+            attenuation = str(round(float(Tx) - float(Rx), accuracy))
+        else:
+            attenuation = ATTENUATION_INCALCULABLE_INDICATOR
+        return attenuation
+
 
     def _unidirectional_attenuation_calculator(self, Tx_data: dict, Rx_data: dict) -> dict:
         assert bool(Tx_data['total']) == bool(Rx_data['total'])
         assert len(Tx_data['per_lane']) == len(Rx_data['per_lane'])
         logger.debug('Calculating attenuation')
-        logger.debug('Tx_data: {}'. format(Tx_data))
-        logger.debug('Rx_data: {}'. format(Rx_data))
-        total_attenuation_dB = str(round(float(Tx_data['total']['dBm']) - float(Rx_data['total']['dBm']), 2))
-        total_attenuation_mW = str(round(float(Tx_data['total']['mW']) - float(Rx_data['total']['mW']), 4))
+        logger.error('Tx_data: {}'. format(Tx_data))
+        logger.error('Rx_data: {}'. format(Rx_data))
+        total_attenuation_dB = self.safe_power_delta_calculator(Tx_data['total']['dBm'], Rx_data['total']['dBm'], 2)
+        total_attenuation_mW = self.safe_power_delta_calculator(Tx_data['total']['mW'], Rx_data['total']['mW'], 4)
+
         per_lane_attenuation = {}
         for laneNum in Tx_data['per_lane'].keys():
-            per_lane_attenuation_dBm = str(round(float(Tx_data['per_lane'][laneNum]['dBm']) -
-                                             float(Rx_data['per_lane'][laneNum]['dBm']), 2))
-            per_lane_attenuation_mW = str(round(float(Tx_data['per_lane'][laneNum]['mW']) -
-                                            float(Rx_data['per_lane'][laneNum]['mW']), 4))
+            per_lane_attenuation_dBm = self.safe_power_delta_calculator(
+                Tx_data['per_lane'][laneNum]['dBm'],
+                Rx_data['per_lane'][laneNum]['dBm'],
+                2)
+
+            per_lane_attenuation_mW = self.safe_power_delta_calculator(
+                Tx_data['per_lane'][laneNum]['mW'],
+                Rx_data['per_lane'][laneNum]['mW'],
+                4
+            )
             per_lane_attenuation[laneNum]= {'dB': per_lane_attenuation_dBm,
                                             'mW': per_lane_attenuation_mW,
                                             }

@@ -3,8 +3,8 @@ import power_analyser
 import os
 import re
 
-SAMPLE_DATA_DIR = 'sample_data'
 
+SAMPLE_DATA_DIR = 'sample_data'
 
 
 @pytest.fixture()
@@ -273,7 +273,6 @@ def test_lane_num_equaliser2(wrapper):
     assert new_lane_array == ['0', '1', '2', '3']
 
 
-
 def test_attenutation_calculation_1(wrapper):
     file1 = 'power_sample1'
     file2 = 'power_sample2'
@@ -351,6 +350,7 @@ def test_junos_generic_diagnostics_optics_parsing1(wrapper):
     assert result['Rx']['per_lane']['3']['mW'] == '0.768'
     assert len(result['Rx']['per_lane'].keys()) == 4
 
+
 def test_junos_generic_diagnostics_optics_parsing2(wrapper):
     file1 = 'juniper_cfp'
     test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
@@ -399,3 +399,70 @@ def test_attenutation_calculation_3(wrapper):
     assert BtoA['per_lane']['3']['dB'] == '1.49'
     assert BtoA['per_lane']['3']['mW'] == '0.292'
 
+
+def test_attenutation_calculation_4(wrapper):
+    file1 = 'power_sample1'
+    file2 = 'juniper_qsfp_plus'
+    test_file_path1 = os.path.join('tests', SAMPLE_DATA_DIR, file1)
+    test_file_path2 = os.path.join('tests', SAMPLE_DATA_DIR, file2)
+    with open(test_file_path1, 'r') as fh:
+        data = fh.read()
+        power_dataA = wrapper.xr_precise_controllers_parsing(data)
+    with open(test_file_path2, 'r') as fh:
+        data = fh.read()
+        power_dataB = wrapper.junos_generic_diagnostics_optics_parsing(data)
+    AtoB = wrapper._unidirectional_attenuation_calculator(power_dataA['Tx'], power_dataB['Rx'])
+    # assessment against manual calculations
+    assert AtoB['total']['dB'] == '-0.2'
+    assert AtoB['total']['mW'] == '-0.143'
+    assert AtoB['per_lane']['0']['dB'] == '-0.01'
+    assert AtoB['per_lane']['0']['mW'] == '-0.003'
+    assert AtoB['per_lane']['3']['dB'] == '-0.16'
+    assert AtoB['per_lane']['3']['mW'] == '-0.028'
+    BtoA = wrapper._unidirectional_attenuation_calculator(power_dataB['Tx'], power_dataA['Rx'])
+    # assessment against manual calculations
+    assert BtoA['total']['dB'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+    assert BtoA['total']['mW'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+    assert BtoA['per_lane']['0']['dB'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+    assert BtoA['per_lane']['0']['mW'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+    assert BtoA['per_lane']['3']['dB'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+    assert BtoA['per_lane']['3']['mW'] == power_analyser.ATTENUATION_INCALCULABLE_INDICATOR
+
+
+def test_safe_power_delta_calculator_1(wrapper):
+    powerA = ('0.05','0.002',None,'0.008')
+    powerB = ('0.04','0.005','0.2', None)
+    result = ('0.01',
+              '-0.003',
+              power_analyser.ATTENUATION_INCALCULABLE_INDICATOR,
+              power_analyser.ATTENUATION_INCALCULABLE_INDICATOR)
+    accuracy = (2, 4, 2, 2)
+    for sample in zip(powerA, powerB, result, accuracy):
+        print(sample)
+        assert  wrapper.safe_power_delta_calculator(sample[0], sample[1], sample[3]) == sample[2]
+
+def test_juniper_sfp_data(wrapper):
+    test_file = 'juniper_sfp'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+        assert result['Tx']['per_lane']['0']['dBm'] == '-6.56'
+        assert result['Tx']['per_lane']['0']['mW'] == '0.2210'
+        assert len(result['Tx']['per_lane'].keys()) == 1
+        assert result['Rx']['per_lane']['0']['dBm'] == '-6.15'
+        assert result['Rx']['per_lane']['0']['mW'] == '0.2429'
+        assert len(result['Rx']['per_lane'].keys()) == 1
+
+def test_juniperxsfp_data(wrapper):
+    test_file = 'juniper_xfp'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+        assert result['Tx']['per_lane']['0']['dBm'] == '-2.49'
+        assert result['Tx']['per_lane']['0']['mW'] == '0.5640'
+        assert len(result['Tx']['per_lane'].keys()) == 1
+        assert result['Rx']['per_lane']['0']['dBm'] == '-10.74'
+        assert result['Rx']['per_lane']['0']['mW'] == '0.0844'
+        assert len(result['Rx']['per_lane'].keys()) == 1
