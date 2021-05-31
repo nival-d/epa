@@ -438,7 +438,6 @@ def test_safe_power_delta_calculator_1(wrapper):
               power_analyser.ATTENUATION_INCALCULABLE_INDICATOR)
     accuracy = (2, 4, 2, 2)
     for sample in zip(powerA, powerB, result, accuracy):
-        print(sample)
         assert  wrapper.safe_power_delta_calculator(sample[0], sample[1], sample[3]) == sample[2]
 
 def test_juniper_sfp_data(wrapper):
@@ -466,3 +465,38 @@ def test_juniperxsfp_data(wrapper):
         assert result['Rx']['per_lane']['0']['dBm'] == '-10.74'
         assert result['Rx']['per_lane']['0']['mW'] == '0.0844'
         assert len(result['Rx']['per_lane'].keys()) == 1
+
+
+def test_dBtomWStr():
+    dbs = ['1', '10', '0', '-10']
+    mW = ['1.2589', '10.0', '1.0', '0.1']
+    for i in zip(dbs, mW):
+        assert i[1] == power_analyser.dBtomWStr(i[0])
+
+
+def test_return_sum_of_mW(wrapper):
+    mW_data = ['0.1', '0.2', '0.4', '10']
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.7'
+    mW_data = ['-0.1', '0.2', '0.4', '10']
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.5'
+    mW_data = [0.1, 0.2, 0.4, 10]
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.7'
+    mW_data = [-0.1, 0.2, 0.4, 10]
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.5'
+    mW_data = ['0.1', '0.2', '0.4', '10']
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.7000
+    mW_data = ['-0.1', '0.2', '0.4', '10']
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.5000
+    mW_data = [0.1, 0.2, 0.4, 10]
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.7000
+    mW_data = [-0.1, 0.2, 0.4, 10]
+    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.5000
+
+def test_cisco_ios_data(wrapper):
+    test_file = 'ios_xenpak'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.ios_show_interface_transciever_parsing(data)
+    print(result)
+    assert 0

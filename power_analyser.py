@@ -1,3 +1,5 @@
+import math
+
 import cli_walker
 import re
 import logging
@@ -16,15 +18,22 @@ JUNIPER_SFP_RE = ('sfp_re',r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*m
 JUNIPER_XFP_RE = ('xfp_re', r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power\s*:\s*'
                             r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
                             r'(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
+CISCO_IOS_RE = ('ios_generic_ge', r'^\w{2}\d+\/\d+\s*[\S\.]*\s*\S*\s[\-\+]*\s*(?P<biasCurrent>\S*)\s[\-\+]*\s*'
+                                  r'(?P<TxdBPower>\S*)\s*[\-\+]*\s+(?P<RxdBPower>\S*)[\-\+]*')
 
 JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE, JUNIPER_SFP_RE, JUNIPER_XFP_RE]
 ATTENUATION_INCALCULABLE_INDICATOR = 'N/A'
+DBM_KEY_NOTATION = 'dBm'
+MW_KEY_NOTATION = 'mW'
 
 
 def single_true(iterable):
     i = iter(iterable)
     return any(i) and not any(i)
 
+def dBtomWStr(db: str, accuracy=4) -> str:
+    mW = math.pow(10, float(db)/10)
+    return str(round(mW, accuracy))
 
 class endpointRegister():
     def __init__(self):
@@ -96,22 +105,28 @@ class endpointRegister():
 
     def get_xrcontrollers_details(self, host: str, interface: str) -> str:
         logger.info('Preparing to perform a show controllers: {} {}'. format(host, interface))
-        show_controllers_command = 'show controllers {}'.format(interface)
-        controllers_data = self.walker.execute(host, show_controllers_command)
+        command = 'show controllers {}'.format(interface)
+        controllers_data = self.walker.execute(host, command)
         return controllers_data
 
 
     def get_xrcontrollers_phy_details(self, host: str, interface: str) -> str:
         logger.info('Preparing to perform a show controllers phy: {}'. format(host, interface))
-        show_controllers_command = 'show controllers {} phy'.format(interface)
-        controllers_data = self.walker.execute(host, show_controllers_command)
+        command = 'show controllers {} phy'.format(interface)
+        controllers_data = self.walker.execute(host, command)
         return controllers_data
 
 
     def get_junos_disgnostics_details(self, host: str, interface: str) -> str:
-        logger.info('Preparing to perform a show controllers phy: {}'.format(host, interface))
-        show_controllers_command = 'show interfaces diagnostics optics {}'.format(interface)
-        controllers_data = self.walker.execute(host, show_controllers_command)
+        logger.info('Preparing to perform a show command for interface: {}'.format(host, interface))
+        command = 'show interfaces diagnostics optics {}'.format(interface)
+        controllers_data = self.walker.execute(host, command)
+        return controllers_data
+
+    def get_ios_show_int_transciever(self, host: str, interface: str) -> str:
+        logger.info('Preparing to perform a show command for interface: {}'.format(host, interface))
+        command = 'show interfaces {} transciever'.format(interface)
+        controllers_data = self.walker.execute(host, command)
         return controllers_data
 
 
@@ -314,6 +329,47 @@ class endpointRegister():
         logger.debug('final_data: {}'.format(transformed_data))
         return transformed_data
 
+    def return_sum_of_mW(self, mW_data: list, mode='as_string', accuracy=4):
+        if all([isinstance(x, str) for x in mW_data]):
+            mW_data = [float(x) for x in mW_data]
+
+        if mode == 'as_string':
+            return str(round(sum(mW_data), accuracy))
+        if mode == 'as_float':
+            return sum(mW_data)
+
+
+    def directional_power_summariser(self, data, direction):
+        values = {DBM_KEY_NOTATION: [],
+                  MW_KEY_NOTATION: []}
+        if not data.get(direction):
+            return None
+        for lane in data.get(direction):
+            for metric in data[direction][lane].keys():
+                values[metric].append(data[direction][lane][metric])
+        # returning mW sum as a preferred value.
+        if values[MW_KEY_NOTATION]:
+            return sum([float(x) for x in values[MW_KEY_NOTATION]])
+
+    def ios_show_interface_transciever_parsing(self, data) -> dict:
+        logger.debug('Starting a parsing process')
+        logger.debug('raw data:{}'. format(data))
+
+        extract = re.finditer(CISCO_IOS_RE[1], data, re.MULTILINE | re.DOTALL)
+        extracted_data= self.iterator_to_dict(extract)
+        logger.error(extracted_data)
+        if extracted_data:
+            transformed_data = {
+                'Tx':
+                    {'total': self.directional_power_summariser(extracted_data, 'Tx'),
+                     'per_lane': self._junos_perLane_transformer(extracted_data, 'Tx')},
+                'Rx':
+                    {'total': self._junos_power_summariser(extracted_data, 'Rx'),
+                     'per_lane': self._junos_perLane_transformer(extracted_data, 'Rx')}
+            }
+        logger.debug('final_data: {}'.format(self.directional_power_summariser(extracted_data, 'Tx')))
+        return transformed_data
+
     def iterator_to_dict(self, iterator):
         data = []
         for item in iterator:
@@ -374,12 +430,19 @@ class endpointRegister():
         power_data = self.xr_precise_controllers_parsing(ddata)
         return power_data
 
+    def _generic_ios_power_extractor(self, device: str, interface: str) -> dict:
+        ddata = self.get_ios_show_int_transciever(device, interface)
+        power_data = self.ios_show_interface_transciever_parsing(ddata)
+        return power_data
+
+
 
     def interface_processor_selector(self, device_trait: str):
         local_function_register = {
             'xrsimplified': self._simplified_xr_power_extractor,
             'xrprecise': self._precise_xr_power_extractor,
-            'junos_generic': self._generic_junos_power_extractor
+            'junos_generic': self._generic_junos_power_extractor,
+            'cisco_ios': self._generic_ios_power_extractor,
         }
         return local_function_register[device_trait]
 
