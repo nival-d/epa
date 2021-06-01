@@ -1,9 +1,10 @@
-import math
 
 import cli_walker
 import re
 import logging
 import time
+import power_handling_functions
+
 
 logger = logging.getLogger()
 
@@ -31,9 +32,6 @@ def single_true(iterable):
     i = iter(iterable)
     return any(i) and not any(i)
 
-def dBtomWStr(db: str, accuracy=4) -> str:
-    mW = math.pow(10, float(db)/10)
-    return str(round(mW, accuracy))
 
 class endpointRegister():
     def __init__(self):
@@ -175,7 +173,6 @@ class endpointRegister():
         return {'dBm':str(round(total_dBm, 2)), 'mW': str(round(total_mW, 4))}
 
 
-
     def _junos_power_summariser(self, data: list, direction: str) -> dict:
         import math
         logger.info('Landed in a junos power summariser')
@@ -313,6 +310,7 @@ class endpointRegister():
         }
         return transformed_data
 
+
     def xr_simplified_controllers_parsing(self, data) -> dict:
         logger.debug('Starting a simplified parsing process')
         logger.debug('raw data:{}'. format(data))
@@ -329,45 +327,75 @@ class endpointRegister():
         logger.debug('final_data: {}'.format(transformed_data))
         return transformed_data
 
-    def return_sum_of_mW(self, mW_data: list, mode='as_string', accuracy=4):
-        if all([isinstance(x, str) for x in mW_data]):
-            mW_data = [float(x) for x in mW_data]
 
-        if mode == 'as_string':
-            return str(round(sum(mW_data), accuracy))
-        if mode == 'as_float':
-            return sum(mW_data)
+    def generic_lane_normalizer(self, data: list, direction: str):
+        logger.info('Started the per lane power normaliser')
+        logger.debug('raw data: {}'.format(data))
+        logger.debug('direction: {}'.format(direction))
+        result = {}
+        lane_numbers = [x.get('laneNum') for x in iter(data)]
+        logger.error(data)
+        lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
+        for line in data:
+            # we count lanes from 0. Some software is inconsistent. Normalizing now.
+            lane_num = self.lane_num_equaliser(line.get('laneNum'), lane_notation_mode)
+            result[lane_num] = {}
+            if direction == 'Tx':
+                result[lane_num] = {
+                    'dBm': line.get('TxdBPower'),
+                    'mW': line.get('TxmWPower')
+                }
+            elif direction == 'Rx':
+                result[lane_num] = {
+                    'dBm': line.get('RxdBPower'),
+                    'mW': line.get('RxmWPower')
+                }
+            else:
+                raise Exception('unknown direction: {}'.format(direction))
+        logger.debug('Transformed_result: {}'.format(result))
+        return result
 
 
     def directional_power_summariser(self, data, direction):
+        logger.error('Looking at data while summarizing: {}'. format(data))
         values = {DBM_KEY_NOTATION: [],
                   MW_KEY_NOTATION: []}
+
         if not data.get(direction):
             return None
-        for lane in data.get(direction):
-            for metric in data[direction][lane].keys():
-                values[metric].append(data[direction][lane][metric])
-        # returning mW sum as a preferred value.
-        if values[MW_KEY_NOTATION]:
-            return sum([float(x) for x in values[MW_KEY_NOTATION]])
+        logger.debug('Extracting dbm and mw data, direction = {}'. format(direction))
+        for lane in data.get(direction)['per_lane']:
+            logger.debug('looking at lane: {}'.format(lane))
+            logger.error(data.get(direction))
+            for metric in data[direction]['per_lane'][lane].keys():
+                logger.error('Summarizing power, direction = {}, metric = {}, lane = {}'.format(direction, metric, lane))
+                values[metric].append(data[direction]['per_lane'][lane][metric])
+        logger.error('Extracted raw_data: {}'. format(values))
+        # assessing which notation is used - mw or dbm
+        if all(values[DBM_KEY_NOTATION]):
+            return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm(values[DBM_KEY_NOTATION], mode='as_string'),
+                   MW_KEY_NOTATION: power_handling_functions.return_sum_of_mW_from_dbm(values[DBM_KEY_NOTATION], mode='as_string')}
+        elif all(values[MW_KEY_NOTATION]):
+            logger.error('Finally got sum data in db: {}'.format(
+                power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION])))
+            return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION], mode='as_string'),
+                    MW_KEY_NOTATION: power_handling_functions.return_sum_of_mw(values[MW_KEY_NOTATION], mode='as_string')}
+        else:
+            raise Exception('Inconsistent lane power notation')
+
 
     def ios_show_interface_transciever_parsing(self, data) -> dict:
         logger.debug('Starting a parsing process')
         logger.debug('raw data:{}'. format(data))
-
         extract = re.finditer(CISCO_IOS_RE[1], data, re.MULTILINE | re.DOTALL)
         extracted_data= self.iterator_to_dict(extract)
-        logger.error(extracted_data)
-        if extracted_data:
-            transformed_data = {
-                'Tx':
-                    {'total': self.directional_power_summariser(extracted_data, 'Tx'),
-                     'per_lane': self._junos_perLane_transformer(extracted_data, 'Tx')},
-                'Rx':
-                    {'total': self._junos_power_summariser(extracted_data, 'Rx'),
-                     'per_lane': self._junos_perLane_transformer(extracted_data, 'Rx')}
-            }
-        logger.debug('final_data: {}'.format(self.directional_power_summariser(extracted_data, 'Tx')))
+        transformed_data = {'Tx': {'per_lane': self.generic_lane_normalizer(extracted_data, 'Tx')},
+                            'Rx': {'per_lane': self.generic_lane_normalizer(extracted_data, 'Rx')}}
+        logger.error('Extracted data: {}'. format(transformed_data))
+        if transformed_data:
+            transformed_data['Tx']['total'] = self.directional_power_summariser(transformed_data, 'Tx')
+            transformed_data['Rx']['total'] = self.directional_power_summariser(transformed_data, 'Rx')
+        logger.error('final_data: {}'.format(transformed_data))
         return transformed_data
 
     def iterator_to_dict(self, iterator):

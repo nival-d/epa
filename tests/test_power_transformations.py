@@ -1,5 +1,6 @@
 import pytest
 import power_analyser
+import power_handling_functions
 import os
 import re
 
@@ -453,6 +454,7 @@ def test_juniper_sfp_data(wrapper):
         assert result['Rx']['per_lane']['0']['mW'] == '0.2429'
         assert len(result['Rx']['per_lane'].keys()) == 1
 
+
 def test_juniperxsfp_data(wrapper):
     test_file = 'juniper_xfp'
     test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
@@ -471,26 +473,27 @@ def test_dBtomWStr():
     dbs = ['1', '10', '0', '-10']
     mW = ['1.2589', '10.0', '1.0', '0.1']
     for i in zip(dbs, mW):
-        assert i[1] == power_analyser.dBtomWStr(i[0])
+        assert i[1] == power_handling_functions.dBtomWStr(i[0])
 
 
 def test_return_sum_of_mW(wrapper):
     mW_data = ['0.1', '0.2', '0.4', '10']
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.7'
+    assert power_handling_functions.return_sum_of_mw(mW_data, mode='as_string') == '10.7'
     mW_data = ['-0.1', '0.2', '0.4', '10']
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.5'
-    mW_data = [0.1, 0.2, 0.4, 10]
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.7'
-    mW_data = [-0.1, 0.2, 0.4, 10]
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_string') == '10.5'
+    assert power_handling_functions.return_sum_of_mw(mW_data, mode='as_string') == '10.5'
+    mW_data = [0.1, 0.2, 0.4, 10.0]
+    assert power_handling_functions.return_sum_of_mw(mW_data, mode='as_string') == '10.7'
+    mW_data = [-0.1, 0.2, 0.4, 10.0]
+    assert power_handling_functions.return_sum_of_mw(mW_data, mode='as_string') == '10.5'
     mW_data = ['0.1', '0.2', '0.4', '10']
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.7000
+    assert power_handling_functions.return_sum_of_mw(mW_data) == 10.7000
     mW_data = ['-0.1', '0.2', '0.4', '10']
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.5000
-    mW_data = [0.1, 0.2, 0.4, 10]
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.7000
-    mW_data = [-0.1, 0.2, 0.4, 10]
-    assert wrapper.return_sum_of_mW(mW_data, mode='as_float') == 10.5000
+    assert power_handling_functions.return_sum_of_mw(mW_data) == 10.5000
+    mW_data = [0.1, 0.2, 0.4, 10.0]
+    assert power_handling_functions.return_sum_of_mw(mW_data) == 10.7000
+    mW_data = [-0.1, 0.2, 0.4, 10.0]
+    assert power_handling_functions.return_sum_of_mw(mW_data) == 10.5000
+
 
 def test_cisco_ios_data(wrapper):
     test_file = 'ios_xenpak'
@@ -498,5 +501,14 @@ def test_cisco_ios_data(wrapper):
     with open(test_file_path, 'r') as fh:
         data = fh.read()
         result = wrapper.ios_show_interface_transciever_parsing(data)
-    print(result)
-    assert 0
+    assert result['Tx']['per_lane']['0']['dBm'] == '-1.4'
+    assert result['Tx']['per_lane']['0']['mW'] == None
+    assert result['Tx']['total']['dBm'] == '-1.4'
+    assert result['Tx']['total']['mW'] == '0.7244'
+    assert result['Rx']['per_lane']['0']['dBm'] == '-2.9'
+    assert result['Rx']['per_lane']['0']['mW'] == None
+    assert result['Rx']['total']['dBm'] == '-2.9'
+    assert result['Rx']['total']['mW'] == '0.5129'
+
+
+
