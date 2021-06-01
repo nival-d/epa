@@ -511,4 +511,28 @@ def test_cisco_ios_data(wrapper):
     assert result['Rx']['total']['mW'] == '0.5129'
 
 
+empty_data_output = {'Tx': {'total': None, 'per_lane': None},
+                     'Rx': {'total': None, 'per_lane': None}}
 
+
+def test_empty_data_cisco_ios(wrapper):
+    data = '   \n   \n    \n'
+    result = wrapper.ios_show_interface_transciever_parsing(data)
+    assert result == empty_data_output
+
+
+def test_empty_data_juniper(wrapper):
+    data = '   \n   \n    \n'
+    result = wrapper.junos_generic_diagnostics_optics_parsing(data)
+    assert result == empty_data_output
+
+
+def test_empty_data_xr_precise(wrapper):
+    data = '   \n   \n    \n'
+    result = wrapper.xr_precise_controllers_parsing(data)
+    assert result == empty_data_output
+
+def test_empty_data_xr_simplified(wrapper):
+    data = '   \n   \n    \n'
+    result = wrapper.xr_simplified_controllers_parsing(data)
+    assert result == empty_data_output
