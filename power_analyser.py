@@ -129,16 +129,19 @@ class endpointRegister():
 
 
     def perLane_transformer(self, data, direction: str) -> dict:
-        logger.info('Extracting per lane power details in direction: {}'. format(direction))
-        logger.debug('Raw_data: {}'. format(data))
-        result = {}
-        for line in iter(data):
-            if line[1] == direction:
-                result[line[0]] = {
-                         'dBm': line[3],
-                         'mW': line[2]
-                }
-        logger.debug('Transformed data: {}'. format(result))
+        logger.error('Extracting per lane power details in direction: {}'. format(direction))
+        logger.error('Raw_data: {}'. format(data))
+        if data:
+            result = {}
+            for line in iter(data):
+                if line[1] == direction:
+                    result[line[0]] = {
+                             'dBm': line[3],
+                             'mW': line[2]
+                    }
+            logger.debug('Transformed data: {}'. format(result))
+        else:
+            result = None
         return result
 
 
@@ -148,6 +151,24 @@ class endpointRegister():
                 return re_match_object.group(target_group)
             except:
                 return None
+        else:
+            return None
+
+
+    def gapfilling_getter(self, re_match_object, direction):
+
+        logger.error('Troubleshooting now')
+        logger.error('re_match_object')
+        logger.error(re_match_object)
+        if re_match_object:
+            if direction == 'Tx':
+                return {
+                'dBm': self.safe_re_getter(re_match_object, 'dBmTxPower'),
+                'mW': self.safe_re_getter(re_match_object, 'mWTxPower')}
+            if direction == 'Rx':
+                return {
+                    'dBm': self.safe_re_getter(re_match_object, 'dBmRxPower'),
+                    'mW': self.safe_re_getter(re_match_object, 'mWRxPower')}
         else:
             return None
 
@@ -285,27 +306,20 @@ class endpointRegister():
 
 
     def xr_precise_controllers_parsing(self, data: str) -> dict:
-        logger.debug('Starting a precise parsing process')
-        logger.debug('raw data:{}'. format(data))
+        logger.error('Starting a precise parsing process')
+        logger.error('raw data:{}'. format(data))
         txTotalre = '^Total Tx power:\s(?P<mWTxPower>\S*)\s*\S*\s\(\s*(?P<dBmTxPower>[\-\d\.]*)\sdBm\)'
         rxTotalre = '^Total Rx power:\s(?P<mWRxPower>\S*)\s*\S*\s\(\s*(?P<dBmRxPower>[\-\d\.]*)\sdBm\)'
         perLanere = '^\s*Lane\s(?P<lane>\d)\s(?P<direction>\S*)\spower:\s(?P<mWpower>\S*)\s\S*\s*\(\s*(?P<dBmPower>[\d\.\-]*)\sdBm\)'
         txTotal_data = re.search(txTotalre, data, re.MULTILINE)
         rxTotal_data = re.search(rxTotalre, data, re.MULTILINE)
         perLane_data = re.findall(perLanere, data, re.MULTILINE)
-
         transformed_data = {
             'Tx':
-                {'total':
-                     {
-                         'dBm': self.safe_re_getter(txTotal_data, 'dBmTxPower'),
-                         'mW': self.safe_re_getter(txTotal_data, 'mWTxPower')},
+                {'total': self.gapfilling_getter(txTotal_data, 'Tx'),
                 'per_lane': self.perLane_transformer(perLane_data, 'Tx')},
             'Rx':
-                {'total':
-                    {
-                        'dBm': self.safe_re_getter(rxTotal_data,'dBmRxPower'),
-                        'mW': self.safe_re_getter(rxTotal_data, 'mWRxPower')},
+                {'total': self.gapfilling_getter(rxTotal_data, 'Rx'),
             'per_lane': self.perLane_transformer(perLane_data, 'Rx')}
         }
         return transformed_data
@@ -335,25 +349,29 @@ class endpointRegister():
         result = {}
         lane_numbers = [x.get('laneNum') for x in iter(data)]
         logger.error(data)
-        lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
-        for line in data:
-            # we count lanes from 0. Some software is inconsistent. Normalizing now.
-            lane_num = self.lane_num_equaliser(line.get('laneNum'), lane_notation_mode)
-            result[lane_num] = {}
-            if direction == 'Tx':
-                result[lane_num] = {
-                    'dBm': line.get('TxdBPower'),
-                    'mW': line.get('TxmWPower')
-                }
-            elif direction == 'Rx':
-                result[lane_num] = {
-                    'dBm': line.get('RxdBPower'),
-                    'mW': line.get('RxmWPower')
-                }
-            else:
-                raise Exception('unknown direction: {}'.format(direction))
-        logger.debug('Transformed_result: {}'.format(result))
-        return result
+
+        if not data:
+            return None
+        else:
+            lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
+            for line in data:
+                # we count lanes from 0. Some software is inconsistent. Normalizing now.
+                lane_num = self.lane_num_equaliser(line.get('laneNum'), lane_notation_mode)
+                result[lane_num] = {}
+                if direction == 'Tx':
+                    result[lane_num] = {
+                        'dBm': line.get('TxdBPower'),
+                        'mW': line.get('TxmWPower')
+                    }
+                elif direction == 'Rx':
+                    result[lane_num] = {
+                        'dBm': line.get('RxdBPower'),
+                        'mW': line.get('RxmWPower')
+                    }
+                else:
+                    raise Exception('unknown direction: {}'.format(direction))
+            logger.debug('Transformed_result: {}'.format(result))
+            return result
 
 
     def directional_power_summariser(self, data, direction):
@@ -364,24 +382,27 @@ class endpointRegister():
         if not data.get(direction):
             return None
         logger.debug('Extracting dbm and mw data, direction = {}'. format(direction))
-        for lane in data.get(direction)['per_lane']:
-            logger.debug('looking at lane: {}'.format(lane))
-            logger.error(data.get(direction))
-            for metric in data[direction]['per_lane'][lane].keys():
-                logger.error('Summarizing power, direction = {}, metric = {}, lane = {}'.format(direction, metric, lane))
-                values[metric].append(data[direction]['per_lane'][lane][metric])
-        logger.error('Extracted raw_data: {}'. format(values))
-        # assessing which notation is used - mw or dbm
-        if all(values[DBM_KEY_NOTATION]):
-            return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm(values[DBM_KEY_NOTATION], mode='as_string'),
-                   MW_KEY_NOTATION: power_handling_functions.return_sum_of_mW_from_dbm(values[DBM_KEY_NOTATION], mode='as_string')}
-        elif all(values[MW_KEY_NOTATION]):
-            logger.error('Finally got sum data in db: {}'.format(
-                power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION])))
-            return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION], mode='as_string'),
-                    MW_KEY_NOTATION: power_handling_functions.return_sum_of_mw(values[MW_KEY_NOTATION], mode='as_string')}
+        if data[direction]['per_lane']:
+            for lane in data.get(direction)['per_lane']:
+                logger.debug('looking at lane: {}'.format(lane))
+                logger.error(data.get(direction))
+                for metric in data[direction]['per_lane'][lane].keys():
+                    logger.error('Summarizing power, direction = {}, metric = {}, lane = {}'.format(direction, metric, lane))
+                    values[metric].append(data[direction]['per_lane'][lane][metric])
+            logger.error('Extracted raw_data: {}'. format(values))
+            # assessing which notation is used - mw or dbm
+            if all(values[DBM_KEY_NOTATION]):
+                return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm(values[DBM_KEY_NOTATION], mode='as_string'),
+                       MW_KEY_NOTATION: power_handling_functions.return_sum_of_mW_from_dbm(values[DBM_KEY_NOTATION], mode='as_string')}
+            elif all(values[MW_KEY_NOTATION]):
+                logger.error('Finally got sum data in db: {}'.format(
+                    power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION])))
+                return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION], mode='as_string'),
+                        MW_KEY_NOTATION: power_handling_functions.return_sum_of_mw(values[MW_KEY_NOTATION], mode='as_string')}
+            else:
+                raise Exception('Inconsistent lane power notation')
         else:
-            raise Exception('Inconsistent lane power notation')
+            return None
 
 
     def ios_show_interface_transciever_parsing(self, data) -> dict:
@@ -430,10 +451,8 @@ class endpointRegister():
             return transformed_data
         elif not any(re_match_array):
             logger.error('Junos diagnostics output didn\'t match any regexes')
-            transformed_data = {
-                'Tx': None,
-                'Rx': None
-            }
+            transformed_data = {'Tx': {'total': None, 'per_lane': None},
+                     'Rx': {'total': None, 'per_lane': None}}
             logger.debug('final_data: {}'.format(transformed_data))
             return transformed_data
         else:
