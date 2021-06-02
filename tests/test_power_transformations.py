@@ -532,7 +532,9 @@ def test_empty_data_xr_precise(wrapper):
     result = wrapper.xr_precise_controllers_parsing(data)
     assert result == empty_data_output
 
+
 def test_empty_data_xr_simplified(wrapper):
     data = '   \n   \n    \n'
     result = wrapper.xr_simplified_controllers_parsing(data)
+    print(result)
     assert result == empty_data_output

@@ -179,19 +179,22 @@ class endpointRegister():
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'. format(direction))
         lane_mW_data = []
-        for line in iter(data):
-            if direction == 'Tx':
-                lane_mW_data.append(line[2])
-            elif direction == 'Rx':
-                lane_mW_data.append(line[4])
-            else:
-                raise Exception('unknown direction: {}'. format(direction))
-        float_data = [float(x) for x in lane_mW_data]
-        total_mW = sum(float_data)
-        total_dBm = 10*math.log10(total_mW)
-        logger.debug('total_mW: {}'. format(total_mW))
-        logger.debug('total_dBm: {}'. format(total_dBm))
-        return {'dBm':str(round(total_dBm, 2)), 'mW': str(round(total_mW, 4))}
+        if not data:
+            return None
+        else:
+            for line in iter(data):
+                if direction == 'Tx':
+                    lane_mW_data.append(line[2])
+                elif direction == 'Rx':
+                    lane_mW_data.append(line[4])
+                else:
+                    raise Exception('unknown direction: {}'. format(direction))
+            float_data = [float(x) for x in lane_mW_data]
+            total_mW = sum(float_data)
+            total_dBm = 10*math.log10(total_mW)
+            logger.debug('total_mW: {}'. format(total_mW))
+            logger.debug('total_dBm: {}'. format(total_dBm))
+            return {'dBm':str(round(total_dBm, 2)), 'mW': str(round(total_mW, 4))}
 
 
     def _junos_power_summariser(self, data: list, direction: str) -> dict:
@@ -254,26 +257,29 @@ class endpointRegister():
         logger.debug('raw data: {}'.format(data))
         logger.debug('direction: {}'.format(direction))
         result = {}
-        lane_numbers = [x[0] for x in data]
-        lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
-        for line in data:
-            # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
-            lane_num = self.lane_num_equaliser(line[0], lane_notation_mode)
-            result[lane_num] = {}
-            if direction == 'Tx':
-                result[lane_num] = {
-                    'dBm': line[1],
-                    'mW': line[2]
-                }
-            elif direction == 'Rx':
-                result[lane_num] = {
-                    'dBm': line[3],
-                    'mW': line[4]
-                }
-            else:
-                raise Exception('unknown direction: {}'. format(direction))
-        logger.debug('Transformed_result: {}'.format(result))
-        return result
+        if data:
+            lane_numbers = [x[0] for x in data]
+            lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
+            for line in data:
+                # we count lanes from 0. Some cisco software is inconsistent. Normalizing now.
+                lane_num = self.lane_num_equaliser(line[0], lane_notation_mode)
+                result[lane_num] = {}
+                if direction == 'Tx':
+                    result[lane_num] = {
+                        'dBm': line[1],
+                        'mW': line[2]
+                    }
+                elif direction == 'Rx':
+                    result[lane_num] = {
+                        'dBm': line[3],
+                        'mW': line[4]
+                    }
+                else:
+                    raise Exception('unknown direction: {}'. format(direction))
+            logger.debug('Transformed_result: {}'.format(result))
+            return result
+        else:
+            return None
 
 
     def _junos_perLane_transformer(self, data: list, direction: str):
