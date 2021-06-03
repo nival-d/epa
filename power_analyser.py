@@ -20,12 +20,32 @@ JUNIPER_XFP_RE = ('xfp_re', r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*
                             r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
                             r'(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
 CISCO_IOS_RE = ('ios_generic_ge', r'^\w{2}\d+\/\d+\s*[\S\.]*\s*\S*\s[\-\+]*\s*(?P<biasCurrent>\S*)\s[\-\+]*\s*'
-                                  r'(?P<TxdBPower>\S*)\s*[\-\+]*\s+(?P<RxdBPower>\S*)[\-\+]*')
+                                  r'(?P<TxdBmPower>\S*)\s*[\-\+]*\s+(?P<RxdBmPower>\S*)[\-\+]*')
+XR_SIMPLIFIED_PER_LANE = ('xr_simplified_per_lane', r'^\s*(?P<laneNumber>\d)\s+\S+\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>'
+                                           r'[\d\.\-]*)\s+(?P<dBmRxPower>[\d\.\-]+)\s*(?P<mWRxPower>[\d\.\-]+)\s+'
+                                           r'(?P<laserBias>[\d\.\-]{3,})')
+
+XR_PRECISE_TOTAL_TX = ('xr_precise_total_tx',r'Total Tx power:\s(?P<mWTxPower>\S*)\s*\S*\s\(\s*(?P<dBmTxPower>[\-\d\.]*)\sdBm\)')
+XR_PRECISE_TOTAL_RX = ('xr_precise_total_rx',r'Total Rx power:\s(?P<mWRxPower>\S*)\s*\S*\s\(\s*(?P<dBmRxPower>[\-\d\.]*)\sdBm\)')
+XR_PRECISE_PER_LANE = ('xr_precise_per_lane', r'^\s*Lane\s(?P<laneNum>\d)\s(?P<direction>\S*)\spower:\s(?P<mWPower>\S*)\s'
+                                              r'\S*\s*\(\s*(?P<dBmPower>[\d\.\-]*)\sdBm\)')
+
+RE_PER_LANE_GROUP_KEY = 'per_lane'
+RE_TOTAL_TX_GROUP_KEY = 'tx_total'
+RE_TOTAL_RX_GROUP_KEY = 'rx_total'
+
+
+XR_PRECISE_RE_ARRAY = {
+    RE_PER_LANE_GROUP_KEY: XR_PRECISE_PER_LANE,
+    RE_TOTAL_TX_GROUP_KEY: XR_PRECISE_TOTAL_TX,
+    RE_TOTAL_RX_GROUP_KEY: XR_PRECISE_TOTAL_RX}
+
 
 JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE, JUNIPER_SFP_RE, JUNIPER_XFP_RE]
 ATTENUATION_INCALCULABLE_INDICATOR = 'N/A'
 DBM_KEY_NOTATION = 'dBm'
 MW_KEY_NOTATION = 'mW'
+
 
 
 def single_true(iterable):
@@ -314,12 +334,9 @@ class endpointRegister():
     def xr_precise_controllers_parsing(self, data: str) -> dict:
         logger.error('Starting a precise parsing process')
         logger.error('raw data:{}'. format(data))
-        txTotalre = '^Total Tx power:\s(?P<mWTxPower>\S*)\s*\S*\s\(\s*(?P<dBmTxPower>[\-\d\.]*)\sdBm\)'
-        rxTotalre = '^Total Rx power:\s(?P<mWRxPower>\S*)\s*\S*\s\(\s*(?P<dBmRxPower>[\-\d\.]*)\sdBm\)'
-        perLanere = '^\s*Lane\s(?P<lane>\d)\s(?P<direction>\S*)\spower:\s(?P<mWpower>\S*)\s\S*\s*\(\s*(?P<dBmPower>[\d\.\-]*)\sdBm\)'
-        txTotal_data = re.search(txTotalre, data, re.MULTILINE)
-        rxTotal_data = re.search(rxTotalre, data, re.MULTILINE)
-        perLane_data = re.findall(perLanere, data, re.MULTILINE)
+        txTotal_data = re.search(XR_PRECISE_TOTAL_TX[1], data, re.MULTILINE)
+        rxTotal_data = re.search(XR_PRECISE_TOTAL_RX[1], data, re.MULTILINE)
+        perLane_data = re.findall(XR_PRECISE_PER_LANE[1], data, re.MULTILINE)
         transformed_data = {
             'Tx':
                 {'total': self.gapfilling_getter(txTotal_data, 'Tx'),
@@ -334,8 +351,7 @@ class endpointRegister():
     def xr_simplified_controllers_parsing(self, data) -> dict:
         logger.debug('Starting a simplified parsing process')
         logger.debug('raw data:{}'. format(data))
-        perLanere = '^\s*(?P<laneNumber>\d)\s+\S+\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>[\d\.\-]*)\s+(?P<dBmRxPower>[\d\.\-]+)\s*(?P<mWRxPower>[\d\.\-]+)\s+(?P<laserBias>[\d\.\-]{3,})'
-        perLane_data = re.findall(perLanere, data, re.MULTILINE)
+        perLane_data = re.findall(XR_SIMPLIFIED_PER_LANE[1], data, re.MULTILINE)
         transformed_data = {
             'Tx':
                 {'total': self._simplified_power_summariser(perLane_data, 'Tx'),
@@ -360,22 +376,79 @@ class endpointRegister():
             return None
         else:
             lane_notation_mode = self.lane_notation_mode_selector(lane_numbers)
+
             for line in data:
                 # we count lanes from 0. Some software is inconsistent. Normalizing now.
                 lane_num = self.lane_num_equaliser(line.get('laneNum'), lane_notation_mode)
-                result[lane_num] = {}
+
+                lane_direction = line.get('direction')
+                logger.debug('Looking at lane: {}'. format(lane_num))
+                logger.debug('Assessed line: {}'.format(line))
+                logger.debug('Assessed direction: {}'. format(direction))
+                logger.debug('Detected lane direction: {}'.format(lane_direction))
+                if not result.get(lane_num):
+                    result[lane_num] = {}
+                logger.debug('Interim data storage: {}'. format(result))
                 if direction == 'Tx':
-                    result[lane_num] = {
-                        'dBm': line.get('TxdBPower'),
-                        'mW': line.get('TxmWPower')
-                    }
+                    logger.debug('Hopped in the Tx part')
+
+                    #todo - move that logic outside
+                    if line.get('TxdBmPower'):
+                        dBm = line.get('TxdBmPower')
+                        logger.debug('Lane has TxdBmPower, value: {}'. format(dBm))
+                        result[lane_num][DBM_KEY_NOTATION] = dBm
+                    if line.get('dBmPower') and (line.get('direction') == 'Tx'):
+                        dBm = line.get('dBmPower')
+                        logger.debug('Lane has dBmPower AND direction is TX, value: {}'. format(dBm))
+                        result[lane_num][DBM_KEY_NOTATION] = dBm
+                    else:
+                        pass
+
+                    if line.get('TxmWPower'):
+                        mW = line.get('TxmWPower')
+                        logger.debug('Lane has TxmWPower, value: {}'. format(mW))
+
+                        result[lane_num][MW_KEY_NOTATION] = mW
+                    if line.get('mWPower') and (line.get('direction') == 'Tx'):
+                        mW = line.get('mWPower')
+                        logger.debug('Lane has mWPower AND direction is TX, value: {}'. format(mW))
+                        result[lane_num][MW_KEY_NOTATION] = mW
+
+                    if not result[lane_num].get(MW_KEY_NOTATION):
+                        result[lane_num][MW_KEY_NOTATION] = None
+                    if not result[lane_num].get(DBM_KEY_NOTATION):
+                        result[lane_num][DBM_KEY_NOTATION] = None
+
+
                 elif direction == 'Rx':
-                    result[lane_num] = {
-                        'dBm': line.get('RxdBPower'),
-                        'mW': line.get('RxmWPower')
-                    }
+                    logger.debug('Hopped in the Rx part')
+                    if line.get('RxdBmPower'):
+                        dBm = line.get('RxdBmPower')
+                        logger.debug('Lane has RxdBmPower, value: {}'. format(dBm))
+                        result[lane_num][DBM_KEY_NOTATION] = dBm
+                    if line.get('dBmPower') and (line.get('direction') == 'Rx'):
+                        dBm = line.get('dBmPower')
+                        logger.debug('Lane has dBmPower AND direction is RX, value: {}'. format(dBm))
+                        result[lane_num][DBM_KEY_NOTATION] = dBm
+
+
+                    if line.get('RxmWPower'):
+                        mW = line.get('RxmWPower')
+                        logger.debug('Lane has RxmWPower, value: {}'. format(dBm))
+                        result[lane_num][MW_KEY_NOTATION] = mW
+                    if line.get('mWPower') and (line.get('direction') == 'Rx'):
+                        mW = line.get('mWPower')
+                        logger.debug('Lane has mWPower AND direction is RX, value: {}'. format(mW))
+                        result[lane_num][MW_KEY_NOTATION] = mW
+
+                    if not result[lane_num].get(MW_KEY_NOTATION):
+                        result[lane_num][MW_KEY_NOTATION] = None
+                    if not result[lane_num].get(DBM_KEY_NOTATION):
+                        result[lane_num][DBM_KEY_NOTATION] = None
+
                 else:
                     raise Exception('unknown direction: {}'.format(direction))
+            logger.debug('Direction is {}'. format(direction))
             logger.debug('Transformed_result: {}'.format(result))
             return result
 
@@ -424,6 +497,48 @@ class endpointRegister():
             transformed_data['Rx']['total'] = self.directional_power_summariser(transformed_data, 'Rx')
         logger.error('final_data: {}'.format(transformed_data))
         return transformed_data
+
+
+    def generic_data_parser(self, data: str,
+                            re_array: dict,
+                            lane_normalizer=generic_lane_normalizer,
+                            power_summarizer=directional_power_summariser):
+        logger.debug('Starting a generic parsing process')
+        logger.debug('raw data:{}'. format(data))
+        extracts = {}
+
+        for key in re_array.keys():
+            if re_array.get(key):
+                print('looking at re: {}'. format(re_array.get(key)[1]))
+                temp_extract = re.finditer(re_array.get(key)[1], data, re.MULTILINE | re.DOTALL)
+                extracts[key] = self.iterator_to_dict(temp_extract)
+
+                logger.error(extracts[key])
+            else:
+                extracts[key] = None
+
+        logger.error(extracts)
+        logger.error('Normalizing lane data: {}'.format(extracts[RE_PER_LANE_GROUP_KEY]))
+        transformed_data = {'Tx': {'per_lane': lane_normalizer(self, data=extracts[RE_PER_LANE_GROUP_KEY], direction='Tx')},
+                            'Rx': {'per_lane': lane_normalizer(self, data=extracts[RE_PER_LANE_GROUP_KEY], direction='Rx')}}
+        logger.info('Here\'s our RE array data: {}'.format(re_array))
+        if re_array.get(RE_TOTAL_TX_GROUP_KEY):
+            tx_total_raw = re.search(re_array[RE_TOTAL_TX_GROUP_KEY][1], data, re.MULTILINE)
+            tx_total = self.gapfilling_getter(tx_total_raw, 'Tx')
+        else:
+            tx_total = power_summarizer(transformed_data, 'Tx')
+
+        if re_array.get(RE_TOTAL_RX_GROUP_KEY):
+            rx_total_raw = re.search(re_array[RE_TOTAL_RX_GROUP_KEY][1], data, re.MULTILINE)
+            rx_total = self.gapfilling_getter(rx_total_raw, 'Rx')
+        else:
+            rx_total = power_summarizer(transformed_data, 'Rx')
+
+        transformed_data['Rx']['total'] = rx_total
+        transformed_data['Tx']['total'] = tx_total
+        logger.error(transformed_data)
+        return transformed_data
+
 
     def iterator_to_dict(self, iterator):
         data = []

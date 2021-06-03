@@ -538,3 +538,42 @@ def test_empty_data_xr_simplified(wrapper):
     result = wrapper.xr_simplified_controllers_parsing(data)
     print(result)
     assert result == empty_data_output
+
+
+def test_generic_data_parser(wrapper):
+    data = '''
+    Total Tx power: 2.91 mW (  4.65 dBm)
+      Lane 0 Tx power: 0.74 mW ( -1.30 dBm)
+      Lane 1 Tx power: 0.70 mW ( -1.54 dBm)
+      Lane 2 Tx power: 0.73 mW ( -1.34 dBm)
+      Lane 3 Tx power: 0.74 mW ( -1.31 dBm)
+    Total Rx power: 4.11 mW (  6.14 dBm)
+      Lane 0 Rx power: 1.28 mW (  1.06 dBm)
+      Lane 1 Rx power: 1.04 mW (  0.19 dBm)
+      Lane 2 Rx power: 1.08 mW (  0.32 dBm)
+      Lane 3 Rx power: 0.71 mW ( -1.48 dBm)'''
+    result = wrapper.generic_data_parser(data, power_analyser.XR_PRECISE_RE_ARRAY)
+    assert result['Tx']['total']['dBm'] == '4.65'
+    assert result['Tx']['total']['mW'] == '2.91'
+    assert result['Rx']['total']['dBm'] == '6.14'
+    assert result['Rx']['total']['mW'] == '4.11'
+    # a physically painful sectionf
+    assert result['Tx']['per_lane']['0']['dBm'] == '-1.30'
+    assert result['Tx']['per_lane']['0']['mW'] == '0.74'
+    assert result['Tx']['per_lane']['1']['dBm'] == '-1.54'
+    assert result['Tx']['per_lane']['1']['mW'] == '0.70'
+    assert result['Tx']['per_lane']['2']['dBm'] == '-1.34'
+    assert result['Tx']['per_lane']['2']['mW'] == '0.73'
+    assert result['Tx']['per_lane']['3']['dBm'] == '-1.31'
+    assert result['Tx']['per_lane']['3']['mW'] == '0.74'
+    assert len(result['Tx']['per_lane'].keys()) == 4
+
+    assert result['Rx']['per_lane']['0']['dBm'] == '1.06'
+    assert result['Rx']['per_lane']['0']['mW'] == '1.28'
+    assert result['Rx']['per_lane']['1']['dBm'] == '0.19'
+    assert result['Rx']['per_lane']['1']['mW'] == '1.04'
+    assert result['Rx']['per_lane']['2']['dBm'] == '0.32'
+    assert result['Rx']['per_lane']['2']['mW'] == '1.08'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-1.48'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.71'
+    assert len(result['Rx']['per_lane'].keys()) == 4
