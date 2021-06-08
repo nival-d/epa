@@ -20,8 +20,9 @@ JUNIPER_XFP_RE = ('xfp_re', r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*
                             r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
                             r'(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
 CISCO_IOS_RE = ('ios_generic_ge', r'^\w{2}\d+\/\d+\s*[\S\.]*\s*\S*\s[\-\+]*\s*(?P<biasCurrent>\S*)\s[\-\+]*\s*'
-                                  r'(?P<TxdBmPower>\S*)\s*[\-\+]*\s+(?P<RxdBmPower>\S*)[\-\+]*')
-XR_SIMPLIFIED_PER_LANE = ('xr_simplified_per_lane', r'^\s*(?P<laneNumber>\d)\s+\S+\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>'
+                                  r'(?P<dBmTxPower>\S*)\s*[\-\+]*\s+(?P<dBmRxPower>\S*)[\-\+]*')
+
+XR_SIMPLIFIED_PER_LANE = ('xr_simplified_per_lane', r'^\s*(?P<laneNum>\d)\s+\S+\s+(?P<dBmTxPower>[\d\.\-]*)\s+(?P<mWTxPower>'
                                            r'[\d\.\-]*)\s+(?P<dBmRxPower>[\d\.\-]+)\s*(?P<mWRxPower>[\d\.\-]+)\s+'
                                            r'(?P<laserBias>[\d\.\-]{3,})')
 
@@ -40,12 +41,25 @@ XR_PRECISE_RE_ARRAY = {
     RE_TOTAL_TX_GROUP_KEY: XR_PRECISE_TOTAL_TX,
     RE_TOTAL_RX_GROUP_KEY: XR_PRECISE_TOTAL_RX}
 
+XR_SIMPLIFIED_RE_ARRAY = {
+    RE_PER_LANE_GROUP_KEY: XR_SIMPLIFIED_PER_LANE,
+    RE_TOTAL_TX_GROUP_KEY: None,
+    RE_TOTAL_RX_GROUP_KEY: None}
+
+IOS_GENERIC_RE_ARRAY = [{
+    RE_PER_LANE_GROUP_KEY: CISCO_IOS_RE,
+    RE_TOTAL_TX_GROUP_KEY: None,
+    RE_TOTAL_RX_GROUP_KEY: None}]
+
+JUNIPER = {
+    RE_PER_LANE_GROUP_KEY: CISCO_IOS_RE,
+    RE_TOTAL_TX_GROUP_KEY: None,
+    RE_TOTAL_RX_GROUP_KEY: None}
 
 JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE, JUNIPER_SFP_RE, JUNIPER_XFP_RE]
 ATTENUATION_INCALCULABLE_INDICATOR = 'N/A'
 DBM_KEY_NOTATION = 'dBm'
 MW_KEY_NOTATION = 'mW'
-
 
 
 def single_true(iterable):
@@ -393,9 +407,9 @@ class endpointRegister():
                     logger.debug('Hopped in the Tx part')
 
                     #todo - move that logic outside
-                    if line.get('TxdBmPower'):
-                        dBm = line.get('TxdBmPower')
-                        logger.debug('Lane has TxdBmPower, value: {}'. format(dBm))
+                    if line.get('dBmTxPower'):
+                        dBm = line.get('dBmTxPower')
+                        logger.debug('Lane has dBmTxPower, value: {}'. format(dBm))
                         result[lane_num][DBM_KEY_NOTATION] = dBm
                     if line.get('dBmPower') and (line.get('direction') == 'Tx'):
                         dBm = line.get('dBmPower')
@@ -404,10 +418,9 @@ class endpointRegister():
                     else:
                         pass
 
-                    if line.get('TxmWPower'):
-                        mW = line.get('TxmWPower')
-                        logger.debug('Lane has TxmWPower, value: {}'. format(mW))
-
+                    if line.get('mWTxPower'):
+                        mW = line.get('mWTxPower')
+                        logger.debug('Lane has mWTxPower, value: {}'. format(mW))
                         result[lane_num][MW_KEY_NOTATION] = mW
                     if line.get('mWPower') and (line.get('direction') == 'Tx'):
                         mW = line.get('mWPower')
@@ -422,9 +435,9 @@ class endpointRegister():
 
                 elif direction == 'Rx':
                     logger.debug('Hopped in the Rx part')
-                    if line.get('RxdBmPower'):
-                        dBm = line.get('RxdBmPower')
-                        logger.debug('Lane has RxdBmPower, value: {}'. format(dBm))
+                    if line.get('dBmRxPower'):
+                        dBm = line.get('dBmRxPower')
+                        logger.debug('Lane has dBmRxPower, value: {}'. format(dBm))
                         result[lane_num][DBM_KEY_NOTATION] = dBm
                     if line.get('dBmPower') and (line.get('direction') == 'Rx'):
                         dBm = line.get('dBmPower')
@@ -432,9 +445,9 @@ class endpointRegister():
                         result[lane_num][DBM_KEY_NOTATION] = dBm
 
 
-                    if line.get('RxmWPower'):
-                        mW = line.get('RxmWPower')
-                        logger.debug('Lane has RxmWPower, value: {}'. format(dBm))
+                    if line.get('mWRxPower'):
+                        mW = line.get('mWRxPower')
+                        logger.debug('Lane has mWRxPower, value: {}'. format(mW))
                         result[lane_num][MW_KEY_NOTATION] = mW
                     if line.get('mWPower') and (line.get('direction') == 'Rx'):
                         mW = line.get('mWPower')
@@ -470,14 +483,18 @@ class endpointRegister():
                     values[metric].append(data[direction]['per_lane'][lane][metric])
             logger.error('Extracted raw_data: {}'. format(values))
             # assessing which notation is used - mw or dbm
-            if all(values[DBM_KEY_NOTATION]):
+            logger.debug('values for summarising: {}'. format(values))
+
+            if all(values[MW_KEY_NOTATION]):
+                logger.error('Finally got sum data in db: {}'.format(
+                power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION])))
+                return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION],
+                                                                                         mode='as_string'),
+                    MW_KEY_NOTATION: power_handling_functions.return_sum_of_mw(values[MW_KEY_NOTATION],
+                                                                               mode='as_string')}
+            elif all(values[DBM_KEY_NOTATION]):
                 return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm(values[DBM_KEY_NOTATION], mode='as_string'),
                        MW_KEY_NOTATION: power_handling_functions.return_sum_of_mW_from_dbm(values[DBM_KEY_NOTATION], mode='as_string')}
-            elif all(values[MW_KEY_NOTATION]):
-                logger.error('Finally got sum data in db: {}'.format(
-                    power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION])))
-                return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm_from_mw(values[MW_KEY_NOTATION], mode='as_string'),
-                        MW_KEY_NOTATION: power_handling_functions.return_sum_of_mw(values[MW_KEY_NOTATION], mode='as_string')}
             else:
                 raise Exception('Inconsistent lane power notation')
         else:
@@ -499,40 +516,108 @@ class endpointRegister():
         return transformed_data
 
 
+    def dict_assessor(self, ddict):
+        logger.debug('raw data: {}'.format(ddict))
+        result = [bool(ddict[kkey]) for kkey in ddict.keys()]
+        logger.debug('result of array assessment: {}'.format(result))
+        return result
+
+
+    def re_selector(self, match_data, re_array_list):
+        # selecting an item with most matches in match_data
+        # returning a correcsponding item from the re_array_list
+        # you'd rather use numpy for that. this function is terrible
+        # todo simplify
+        logger.debug('Hit the re_selector function')
+        logger.error(match_data)
+        logger.error(re_array_list)
+        _ = {}
+        logger.debug('match_data = {}'.format(match_data))
+        logger.debug('re_array_list = {}'.format(re_array_list))
+        for num, item in enumerate(match_data):
+            print(num)
+            print(item)
+            print(match_data[item])
+            length = len(match_data[item][0])
+            num_trues = sum(match_data[item][0])
+            logger.debug('num_trues: {}'. format(num_trues))
+            logger.debug('total length of match entity: {}'. format(length))
+            _[num] = num_trues/length
+        match_scores = {}
+        logger.debug('Our transformed data storage: {}'. format(_))
+        logger.debug('Starting the match score assessment')
+        for key in _.keys():
+            match_rating = _[key]
+            if not match_rating in match_scores:
+                match_scores[match_rating] = key
+            else:
+                raise Exception('duplicate match ratings, best RE cannot be determined')
+        logger.debug('Match ratings: {}'. format(match_scores))
+        ratings_sorted = [x for x in match_scores.keys()]
+        ratings_sorted.sort(reverse=True)
+        logger.debug('Unsorted rating: {}'. format(ratings_sorted))
+        result = re_array_list[match_scores[ratings_sorted[0]]]
+        logger.debug('Result of selecting an RE with the most hits on re matched data: {}'.format(result))
+        return result
+
+
     def generic_data_parser(self, data: str,
-                            re_array: dict,
+                            re_data,
                             lane_normalizer=generic_lane_normalizer,
                             power_summarizer=directional_power_summariser):
         logger.debug('Starting a generic parsing process')
         logger.debug('raw data:{}'. format(data))
-        extracts = {}
+        match_data = {}
+        if isinstance(re_data, list):
+            for num, re_array_item in enumerate(re_data):
+                logger.debug('re_array_list : {}'. format(re_data))
+                raw_extracts = {}
+                for key in re_array_item.keys():
+                    if re_array_item.get(key):
+                        print('looking at re: {}'. format(re_array_item.get(key)[1]))
+                        temp_extract = re.finditer(re_array_item.get(key)[1], data, re.MULTILINE | re.DOTALL)
+                        raw_extracts[key] = self.iterator_to_dict(temp_extract)
+                        logger.error(raw_extracts[key])
+                    else:
+                        raw_extracts[key] = None
+                assessment = self.dict_assessor(raw_extracts)
+                match_data[num] = (assessment, raw_extracts)
+            extracts, re_array = self.re_selector(match_data, re_data)
+        else:
 
-        for key in re_array.keys():
-            if re_array.get(key):
-                print('looking at re: {}'. format(re_array.get(key)[1]))
-                temp_extract = re.finditer(re_array.get(key)[1], data, re.MULTILINE | re.DOTALL)
-                extracts[key] = self.iterator_to_dict(temp_extract)
+            extracts = {}
+            re_array = re_data
+            for key in re_data.keys():
+                if re_data.get(key):
+                    print('looking at re: {}'.format(re_data.get(key)[1]))
+                    temp_extract = re.finditer(re_data.get(key)[1], data, re.MULTILINE | re.DOTALL)
+                    extracts[key] = self.iterator_to_dict(temp_extract)
 
-                logger.error(extracts[key])
-            else:
-                extracts[key] = None
+                    logger.error(extracts[key])
+                else:
+                    extracts[key] = None
 
         logger.error(extracts)
         logger.error('Normalizing lane data: {}'.format(extracts[RE_PER_LANE_GROUP_KEY]))
         transformed_data = {'Tx': {'per_lane': lane_normalizer(self, data=extracts[RE_PER_LANE_GROUP_KEY], direction='Tx')},
                             'Rx': {'per_lane': lane_normalizer(self, data=extracts[RE_PER_LANE_GROUP_KEY], direction='Rx')}}
         logger.info('Here\'s our RE array data: {}'.format(re_array))
+        logger.info('Here\'s our interim transformed data: {}'.format(transformed_data))
         if re_array.get(RE_TOTAL_TX_GROUP_KEY):
+            logger.info('The groups has a total tx key defined. processing now')
             tx_total_raw = re.search(re_array[RE_TOTAL_TX_GROUP_KEY][1], data, re.MULTILINE)
             tx_total = self.gapfilling_getter(tx_total_raw, 'Tx')
         else:
-            tx_total = power_summarizer(transformed_data, 'Tx')
+            logger.info('The groups does not have a total tx key defined. summarizing now')
+            tx_total = power_summarizer(self, transformed_data, 'Tx')
 
         if re_array.get(RE_TOTAL_RX_GROUP_KEY):
+            logger.info('The groups has a total rx key defined. processing now')
             rx_total_raw = re.search(re_array[RE_TOTAL_RX_GROUP_KEY][1], data, re.MULTILINE)
             rx_total = self.gapfilling_getter(rx_total_raw, 'Rx')
         else:
-            rx_total = power_summarizer(transformed_data, 'Rx')
+            logger.info('The groups does not have a total rx key defined. summarizing now')
+            rx_total = power_summarizer(self, transformed_data, 'Rx')
 
         transformed_data['Rx']['total'] = rx_total
         transformed_data['Tx']['total'] = tx_total
@@ -625,6 +710,7 @@ class endpointRegister():
                 self.interface_register[device][interface]['power_data'] = power_data
                 time.sleep(self.sleep_timer)
 
+
     def safe_power_delta_calculator(self, Tx: str, Rx: str, accuracy=2) -> str:
         if Tx and Rx:
             attenuation = str(round(float(Tx) - float(Rx), accuracy))
@@ -679,5 +765,3 @@ class endpointRegister():
     def attenuation_calculator(self) -> None:
         for i in self.link_register:
             self._per_link_attenuation_calculator(i)
-
-

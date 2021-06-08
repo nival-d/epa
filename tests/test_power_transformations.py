@@ -536,7 +536,6 @@ def test_empty_data_xr_precise(wrapper):
 def test_empty_data_xr_simplified(wrapper):
     data = '   \n   \n    \n'
     result = wrapper.xr_simplified_controllers_parsing(data)
-    print(result)
     assert result == empty_data_output
 
 
@@ -568,6 +567,7 @@ def test_generic_data_parser(wrapper):
     assert result['Tx']['per_lane']['3']['mW'] == '0.74'
     assert len(result['Tx']['per_lane'].keys()) == 4
 
+
     assert result['Rx']['per_lane']['0']['dBm'] == '1.06'
     assert result['Rx']['per_lane']['0']['mW'] == '1.28'
     assert result['Rx']['per_lane']['1']['dBm'] == '0.19'
@@ -577,3 +577,130 @@ def test_generic_data_parser(wrapper):
     assert result['Rx']['per_lane']['3']['dBm'] == '-1.48'
     assert result['Rx']['per_lane']['3']['mW'] == '0.71'
     assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+def test_generic_data_parser2(wrapper):
+    data = '''           Wavelength    Tx Power          Rx Power      Laser Bias
+        Lane  (nm)    (dBm)    (mW)     (dBm)     (mW)      (mA)
+        --   -----   ------   ------    ------   ------    ------
+        1    0     2.2   1.6769     -1.1   0.2738     176.624
+        2    0     1.4   1.3649     -3.3   0.0770     176.624
+        3    0     2.5   1.7848     -3.5   0.1120     176.624
+        4    0     2.8   1.8950     -6.2   0.6707     176.624'''
+
+    result = wrapper.generic_data_parser(data, power_analyser.XR_SIMPLIFIED_RE_ARRAY)
+
+    assert result['Tx']['total']['mW'] == '6.7216'
+    assert result['Rx']['total']['mW'] == '1.1335'
+
+    # a physically painful section
+    assert result['Tx']['per_lane']['0']['dBm'] == '2.2'
+    assert result['Tx']['per_lane']['0']['mW'] == '1.6769'
+    assert result['Tx']['per_lane']['1']['dBm'] == '1.4'
+    assert result['Tx']['per_lane']['1']['mW'] == '1.3649'
+    assert result['Tx']['per_lane']['2']['dBm'] == '2.5'
+    assert result['Tx']['per_lane']['2']['mW'] == '1.7848'
+    assert result['Tx']['per_lane']['3']['dBm'] == '2.8'
+    assert result['Tx']['per_lane']['3']['mW'] == '1.8950'
+    assert len(result['Tx']['per_lane'].keys()) == 4
+    assert result['Rx']['per_lane']['0']['dBm'] == '-1.1'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.2738'
+    assert result['Rx']['per_lane']['1']['dBm'] == '-3.3'
+    assert result['Rx']['per_lane']['1']['mW'] == '0.0770'
+    assert result['Rx']['per_lane']['2']['dBm'] == '-3.5'
+    assert result['Rx']['per_lane']['2']['mW'] == '0.1120'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-6.2'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.6707'
+    assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+def test_generic_data_parser3(wrapper):
+    test_file = 'ios_xenpak'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.generic_data_parser(data, power_analyser.IOS_GENERIC_RE_ARRAY)
+    print(result)
+    assert result['Tx']['per_lane']['0']['dBm'] == '-1.4'
+    assert result['Tx']['per_lane']['0']['mW'] == None
+    assert result['Tx']['total']['dBm'] == '-1.4'
+    assert result['Tx']['total']['mW'] == '0.7244'
+    assert result['Rx']['per_lane']['0']['dBm'] == '-2.9'
+    assert result['Rx']['per_lane']['0']['mW'] == None
+    assert result['Rx']['total']['dBm'] == '-2.9'
+    assert result['Rx']['total']['mW'] == '0.5129'
+
+def test_dict_assessor(wrapper):
+    re_array = [
+        {'per_lane':
+             ('ios_generic_ge',
+              '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*'
+              '(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}]
+
+    match_data = {0: (
+        [True, False, False],
+        {'per_lane':
+             [
+                 {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
+             ],
+            'tx_total': None,
+            'rx_total': None})}
+    result = wrapper.re_selector(match_data, re_array)
+    assert result == {'per_lane': ('ios_generic_ge', '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
+
+
+def test_dict_assessor2(wrapper):
+    re_array = [
+        {'per_lane':
+             ('ios_generic_ge',
+              '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*'
+              '(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None},
+        {'per_lane':
+             ('ios_generic_ge2',
+              '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*'
+              '(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None},
+        {'per_lane':
+             ('ios_generic_ge3',
+              '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*'
+              '(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
+    ]
+
+    match_data = {0: (
+        [True, False, False],
+        {'per_lane':
+             [
+                 {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
+             ],
+            'tx_total': None,
+            'rx_total': None}),
+        1: (
+            [False, False, False],
+            {'per_lane':
+                [
+                    {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
+                ],
+                'tx_total': None,
+                'rx_total': None}),
+        2: (
+            [True, False, True],
+            {'per_lane':
+                [
+                    {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
+                ],
+                'tx_total': None,
+                'rx_total': None})
+    }
+    result = wrapper.re_selector(match_data, re_array)
+    assert result == {'per_lane': ('ios_generic_ge3', '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
+
+
+
+
+'''
+def test_generic_data_parser4(wrapper):
+    test_file = 'juniper_cfp'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.generic_data_parser(data, power_analyser.)
+'''
