@@ -722,3 +722,32 @@ def test_generic_data_parser5(wrapper):
     assert result['Rx']['per_lane']['3']['dBm'] == '-1.15'
     assert result['Rx']['per_lane']['3']['mW'] == '0.768'
     assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+def test_generic_data_parser6(wrapper):
+    test_file = 'juniper_sfp'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.generic_data_parser(data, power_analyser.JUNIPER_GENERIC_RE_ARRAY)
+    assert result['Tx']['per_lane']['0']['dBm'] == '-6.56'
+    assert result['Tx']['per_lane']['0']['mW'] == '0.2210'
+    assert len(result['Tx']['per_lane'].keys()) == 1
+    assert result['Rx']['per_lane']['0']['dBm'] == '-6.15'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.2429'
+    assert len(result['Rx']['per_lane'].keys()) == 1
+
+
+def test_generic_data_parser7(wrapper):
+    test_file = 'juniper_xfp'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.generic_data_parser(data, power_analyser.JUNIPER_GENERIC_RE_ARRAY)
+    assert result['Tx']['per_lane']['0']['dBm'] == '-2.49'
+    assert result['Tx']['per_lane']['0']['mW'] == '0.5640'
+    assert len(result['Tx']['per_lane'].keys()) == 1
+    assert result['Rx']['per_lane']['0']['dBm'] == '-10.74'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.0844'
+    assert len(result['Rx']['per_lane'].keys()) == 1
+

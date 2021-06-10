@@ -1,0 +1,46 @@
+Physical interface: ge-3/0/6
+    Laser bias current                        :  13.356 mA
+    Laser output power                        :  0.2210 mW / -6.56 dBm
+    Module temperature                        :  36 degrees C / 96 degrees F
+    Module voltage                            :  3.2180 V
+    Receiver signal average optical power     :  0.2429 mW / -6.15 dBm
+    Laser bias current high alarm             :  Off
+    Laser bias current low alarm              :  Off
+    Laser bias current high warning           :  Off
+    Laser bias current low warning            :  Off
+    Laser output power high alarm             :  Off
+    Laser output power low alarm              :  Off
+    Laser output power high warning           :  Off
+    Laser output power low warning            :  Off
+    Module temperature high alarm             :  Off
+    Module temperature low alarm              :  Off
+    Module temperature high warning           :  Off
+    Module temperature low warning            :  Off
+    Module voltage high alarm                 :  Off
+    Module voltage low alarm                  :  Off
+    Module voltage high warning               :  Off
+    Module voltage low warning                :  Off
+    Laser rx power high alarm                 :  Off
+    Laser rx power low alarm                  :  Off
+    Laser rx power high warning               :  Off
+    Laser rx power low warning                :  Off
+    Laser bias current high alarm threshold   :  70.000 mA
+    Laser bias current low alarm threshold    :  0.002 mA
+    Laser bias current high warning threshold :  65.000 mA
+    Laser bias current low warning threshold  :  0.002 mA
+    Laser output power high alarm threshold   :  1.0000 mW / 0.00 dBm
+    Laser output power low alarm threshold    :  0.0560 mW / -12.52 dBm
+    Laser output power high warning threshold :  0.6300 mW / -2.01 dBm
+    Laser output power low warning threshold  :  0.0890 mW / -10.51 dBm
+    Module temperature high alarm threshold   :  100 degrees C / 212 degrees F
+    Module temperature low alarm threshold    :  -50 degrees C / -58 degrees F
+    Module temperature high warning threshold :  95 degrees C / 203 degrees F
+    Module temperature low warning threshold  :  -48 degrees C / -54 degrees F
+    Module voltage high alarm threshold       :  3.700 V
+    Module voltage low alarm threshold        :  2.900 V
+    Module voltage high warning threshold     :  3.600 V
+    Module voltage low warning threshold      :  3.000 V
+    Laser rx power high alarm threshold       :  1.9953 mW / 3.00 dBm
+    Laser rx power low alarm threshold        :  0.0001 mW / -40.00 dBm
+    Laser rx power high warning threshold     :  1.0000 mW / 0.00 dBm
+    Laser rx power low warning threshold      :  0.0010 mW / -30.00 dBm
