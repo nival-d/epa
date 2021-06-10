@@ -483,6 +483,11 @@ class endpointRegister():
             logger.debug('Transformed_result: {}'.format(result))
             return result
 
+    def complete_null_across_all(self, data):
+        logger.debug(data)
+        all_mw_nulls =  all(x == None for x in data[MW_KEY_NOTATION])
+        all_db_nulls =  all(x == None for x in data[DBM_KEY_NOTATION])
+        return all_mw_nulls and all_db_nulls
 
     def directional_power_summariser(self, data, direction):
         logger.error('Looking at data while summarizing: {}'. format(data))
@@ -513,6 +518,8 @@ class endpointRegister():
             elif all(values[DBM_KEY_NOTATION]):
                 return {DBM_KEY_NOTATION: power_handling_functions.return_sum_of_dbm(values[DBM_KEY_NOTATION], mode='as_string'),
                        MW_KEY_NOTATION: power_handling_functions.return_sum_of_mW_from_dbm(values[DBM_KEY_NOTATION], mode='as_string')}
+            elif self.complete_null_across_all(values):
+                logger.warning('All values are detected as absent. is the re correct?')
             else:
                 raise Exception('Inconsistent lane power notation')
         else:

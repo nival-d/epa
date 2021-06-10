@@ -441,6 +441,7 @@ def test_safe_power_delta_calculator_1(wrapper):
     for sample in zip(powerA, powerB, result, accuracy):
         assert  wrapper.safe_power_delta_calculator(sample[0], sample[1], sample[3]) == sample[2]
 
+
 def test_juniper_sfp_data(wrapper):
     test_file = 'juniper_sfp'
     test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
@@ -701,4 +702,23 @@ def test_generic_data_parser4(wrapper):
     assert result['Rx']['per_lane']['0']['mW'] == '0.497'
     assert result['Rx']['per_lane']['3']['dBm'] == '-1.96'
     assert result['Rx']['per_lane']['3']['mW'] == '0.637'
+    assert len(result['Rx']['per_lane'].keys()) == 4
+
+
+
+def test_generic_data_parser5(wrapper):
+    test_file = 'juniper_qsfp_plus'
+    test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
+    with open(test_file_path, 'r') as fh:
+        data = fh.read()
+        result = wrapper.generic_data_parser(data, power_analyser.JUNIPER_GENERIC_RE_ARRAY)
+    assert result['Tx']['per_lane']['0']['dBm'] == None
+    assert result['Tx']['per_lane']['0']['mW'] == None
+    assert result['Tx']['per_lane']['3']['dBm'] == None
+    assert result['Tx']['per_lane']['3']['mW'] == None
+    assert len(result['Tx']['per_lane'].keys()) == 4
+    assert result['Rx']['per_lane']['0']['dBm'] == '-1.29'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.743'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-1.15'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.768'
     assert len(result['Rx']['per_lane'].keys()) == 4
