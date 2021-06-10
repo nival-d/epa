@@ -9,16 +9,16 @@ import power_handling_functions
 logger = logging.getLogger()
 
 JUNIPER_CFP_RE = ('cfp_re', r'^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power' \
-                 r'\s*:\s*(?P<TxmWPower>\S*)\s*\w*\s\/\s*(?P<TxdBPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
-                 r'(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)\s\w*\n')
+                 r'\s*:\s*(?P<mWTxPower>\S*)\s*\w*\s\/\s*(?P<dBmTxPower>\S*)\s*dBm\n.*?\s*.*?Laser\sreceiver\spower\s*:\s*' \
+                 r'(?P<mWRxPower>\S*)\s*mW\s*\/\s*(?P<dBmRxPower>\S*)\s\w*\n')
 JUNIPER_QSFP_RE = ('qsfp_re', r'^\s*Lane\s*(?P<laneNum>\d+).*?Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA\n\s*Laser\s' \
-                  r'receiver\spower\s*:\s*(?P<RxmWPower>\S*)\s*mW\s*\/\s*(?P<RxdBPower>\S*)')
+                  r'receiver\spower\s*:\s*(?P<mWRxPower>\S*)\s*mW\s*\/\s*(?P<dBmRxPower>\S*)')
 JUNIPER_SFP_RE = ('sfp_re',r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power\s*:\s*'
-                           r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Receiver\ssignal\saverage\s'
-                           r'optical\spower\s*:\s*(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
+                           r'(?P<mWTxPower>\S*)\s*\w*\s\/\s(?P<dBmTxPower>[\-\.\w\d]*).*Receiver\ssignal\saverage\s'
+                           r'optical\spower\s*:\s*(?P<mWRxPower>\S*)\smW\s\/\s(?P<dBmRxPower>\S*)\sdBm')
 JUNIPER_XFP_RE = ('xfp_re', r'Laser\sbias\scurrent\s*:\s*(?P<current>[\d\.]*)\s*mA.*?Laser\soutput\s*power\s*:\s*'
-                            r'(?P<TxmWPower>\S*)\s*\w*\s\/\s(?P<TxdBPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
-                            r'(?P<RxmWPower>\S*)\smW\s\/\s(?P<RxdBPower>\S*)\sdBm')
+                            r'(?P<mWTxPower>\S*)\s*\w*\s\/\s(?P<dBmTxPower>[\-\.\w\d]*).*Laser\srx\spower\s*:\s*'
+                            r'(?P<mWRxPower>\S*)\smW\s\/\s(?P<dBmRxPower>\S*)\sdBm')
 CISCO_IOS_RE = ('ios_generic_ge', r'^\w{2}\d+\/\d+\s*[\S\.]*\s*\S*\s[\-\+]*\s*(?P<biasCurrent>\S*)\s[\-\+]*\s*'
                                   r'(?P<dBmTxPower>\S*)\s*[\-\+]*\s+(?P<dBmRxPower>\S*)[\-\+]*')
 
@@ -41,20 +41,38 @@ XR_PRECISE_RE_ARRAY = {
     RE_TOTAL_TX_GROUP_KEY: XR_PRECISE_TOTAL_TX,
     RE_TOTAL_RX_GROUP_KEY: XR_PRECISE_TOTAL_RX}
 
+
 XR_SIMPLIFIED_RE_ARRAY = {
     RE_PER_LANE_GROUP_KEY: XR_SIMPLIFIED_PER_LANE,
     RE_TOTAL_TX_GROUP_KEY: None,
     RE_TOTAL_RX_GROUP_KEY: None}
+
 
 IOS_GENERIC_RE_ARRAY = {
     RE_PER_LANE_GROUP_KEY: CISCO_IOS_RE,
     RE_TOTAL_TX_GROUP_KEY: None,
     RE_TOTAL_RX_GROUP_KEY: None}
 
-JUNIPER = {
-    RE_PER_LANE_GROUP_KEY: CISCO_IOS_RE,
-    RE_TOTAL_TX_GROUP_KEY: None,
-    RE_TOTAL_RX_GROUP_KEY: None}
+
+JUNIPER_GENERIC_RE_ARRAY = [
+    {
+        RE_PER_LANE_GROUP_KEY: JUNIPER_CFP_RE,
+        RE_TOTAL_TX_GROUP_KEY: None,
+        RE_TOTAL_RX_GROUP_KEY: None},
+    {
+        RE_PER_LANE_GROUP_KEY: JUNIPER_QSFP_RE,
+        RE_TOTAL_TX_GROUP_KEY: None,
+        RE_TOTAL_RX_GROUP_KEY: None},
+    {
+        RE_PER_LANE_GROUP_KEY: JUNIPER_SFP_RE,
+        RE_TOTAL_TX_GROUP_KEY: None,
+        RE_TOTAL_RX_GROUP_KEY: None},
+    {
+        RE_PER_LANE_GROUP_KEY: JUNIPER_XFP_RE,
+        RE_TOTAL_TX_GROUP_KEY: None,
+        RE_TOTAL_RX_GROUP_KEY: None}
+]
+
 
 JUNIPER_GENERIC_RES = [JUNIPER_CFP_RE, JUNIPER_QSFP_RE, JUNIPER_SFP_RE, JUNIPER_XFP_RE]
 ATTENUATION_INCALCULABLE_INDICATOR = 'N/A'
@@ -239,9 +257,9 @@ class endpointRegister():
         lane_mW_data = []
         for line in iter(data):
             if direction == 'Tx':
-                lane_mW_data.append(line.get('TxmWPower'))
+                lane_mW_data.append(line.get('mWTxPower'))
             elif direction == 'Rx':
-                lane_mW_data.append(line.get('RxmWPower'))
+                lane_mW_data.append(line.get('mWRxPower'))
             else:
                 raise Exception('Unknown direction: {}'. format(direction))
         if all(lane_mW_data):
@@ -331,13 +349,13 @@ class endpointRegister():
             result[lane_num] = {}
             if direction == 'Tx':
                 result[lane_num] = {
-                    'dBm': line.get('TxdBPower'),
-                    'mW': line.get('TxmWPower')
+                    'dBm': line.get('dBmTxPower'),
+                    'mW': line.get('mWTxPower')
                 }
             elif direction == 'Rx':
                 result[lane_num] = {
-                    'dBm': line.get('RxdBPower'),
-                    'mW': line.get('RxmWPower')
+                    'dBm': line.get('dBmRxPower'),
+                    'mW': line.get('mWRxPower')
                 }
             else:
                 raise Exception('unknown direction: {}'.format(direction))
@@ -548,15 +566,18 @@ class endpointRegister():
         logger.debug('Starting the match score assessment')
         for key in _.keys():
             match_rating = _[key]
-            if not match_rating in match_scores:
-                match_scores[match_rating] = key
-            else:
-                raise Exception('duplicate match ratings, best RE cannot be determined')
+            if match_rating:
+                if not match_rating in match_scores:
+                    match_scores[match_rating] = key
+                else:
+                    raise Exception('duplicate match ratings, best RE cannot be determined')
+
         logger.debug('Match ratings: {}'. format(match_scores))
         ratings_sorted = [x for x in match_scores.keys()]
         ratings_sorted.sort(reverse=True)
         logger.debug('Unsorted rating: {}'. format(ratings_sorted))
-        result = re_array_list[match_scores[ratings_sorted[0]]]
+        logger.debug('match_data: {}'.format(match_data))
+        result = match_data[match_scores[ratings_sorted[0]]][1], re_array_list[match_scores[ratings_sorted[0]]]
         logger.debug('Result of selecting an RE with the most hits on re matched data: {}'.format(result))
         return result
 

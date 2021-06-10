@@ -646,7 +646,7 @@ def test_dict_assessor(wrapper):
             'tx_total': None,
             'rx_total': None})}
     result = wrapper.re_selector(match_data, re_array)
-    assert result == {'per_lane': ('ios_generic_ge', '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
+    assert result == (match_data[0][1], re_array[0])
 
 
 def test_dict_assessor2(wrapper):
@@ -664,43 +664,41 @@ def test_dict_assessor2(wrapper):
               '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*'
               '(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
     ]
-
-    match_data = {0: (
-        [True, False, False],
-        {'per_lane':
+    winning_output = {'per_lane':
              [
                  {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
              ],
             'tx_total': None,
-            'rx_total': None}),
-        1: (
-            [False, False, False],
-            {'per_lane':
-                [
-                    {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
-                ],
-                'tx_total': None,
-                'rx_total': None}),
-        2: (
-            [True, False, True],
-            {'per_lane':
-                [
-                    {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
-                ],
-                'tx_total': None,
-                'rx_total': None})
+            'rx_total': None}
+
+    losing_output = {'per_lane':
+             [
+                 {'biasCurrent': '39.2', 'dBmTxPower': '-1.4', 'dBmRxPower': '-2.9'}
+             ],
+            'tx_total': None,
+            'rx_total': None}
+    match_data = {
+        0: ([True, False, False],losing_output),
+        1: ([False, False, False], losing_output),
+        2: ([True, False, True], winning_output)
     }
     result = wrapper.re_selector(match_data, re_array)
-    assert result == {'per_lane': ('ios_generic_ge3', '^\\w{2}\\d+\\/\\d+\\s*[\\S\\.]*\\s*\\S*\\s[\\-\\+]*\\s*(?P<biasCurrent>\\S*)\\s[\\-\\+]*\\s*(?P<dBmTxPower>\\S*)\\s*[\\-\\+]*\\s+(?P<dBmRxPower>\\S*)[\\-\\+]*'), 'tx_total': None, 'rx_total': None}
+    assert result == (winning_output, re_array[2])
 
 
-
-
-'''
 def test_generic_data_parser4(wrapper):
     test_file = 'juniper_cfp'
     test_file_path = os.path.join('tests', SAMPLE_DATA_DIR, test_file)
     with open(test_file_path, 'r') as fh:
         data = fh.read()
-        result = wrapper.generic_data_parser(data, power_analyser.)
-'''
+        result = wrapper.generic_data_parser(data, power_analyser.JUNIPER_GENERIC_RE_ARRAY)
+    assert result['Tx']['per_lane']['0']['dBm'] == '0.01'
+    assert result['Tx']['per_lane']['0']['mW'] == '1.002'
+    assert result['Tx']['per_lane']['3']['dBm'] == '0.01'
+    assert result['Tx']['per_lane']['3']['mW'] == '1.002'
+    assert len(result['Tx']['per_lane'].keys()) == 4
+    assert result['Rx']['per_lane']['0']['dBm'] == '-3.03'
+    assert result['Rx']['per_lane']['0']['mW'] == '0.497'
+    assert result['Rx']['per_lane']['3']['dBm'] == '-1.96'
+    assert result['Rx']['per_lane']['3']['mW'] == '0.637'
+    assert len(result['Rx']['per_lane'].keys()) == 4
